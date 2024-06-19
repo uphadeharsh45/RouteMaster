@@ -9,17 +9,8 @@ import {useNavigation} from '@react-navigation/native';
 
 
 const Home = () => {
-const navigation=useNavigation()
 
-    const signOut=async()=>{
-        // AsyncStorage.setItem('isLoggedIn','');
-       await AsyncStorage.removeItem('isLoggedIn');
-        // AsyncStorage.setItem('token','');
-        await AsyncStorage.removeItem('token');
-        navigation.navigate('Login');
-      }
-
-  
+    const navigation=useNavigation()
 
     const handleBackPress = () => {
         Alert.alert('Exit App', 'Are you sure you want to exit?', [
@@ -53,8 +44,8 @@ const navigation=useNavigation()
     <View style={styles.viewStyle}>
         <Text style={styles.headingStyle}>React Native Navigation</Text>
         <Text style={styles.textStyle}>This is Home Screen</Text>    
-        <Button title='Signout' 
-        onPress={async ()=> await signOut() }/>   
+        <Button title='Map page' 
+        onPress={() => navigation.navigate('Map1')}/>   
     </View>
   )
 }

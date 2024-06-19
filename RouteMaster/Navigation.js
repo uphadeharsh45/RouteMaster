@@ -9,6 +9,7 @@ import Register from './Screens/Login&Register/Register';
 import SavedRoutes from './Screens/SavedRoutes';
 import { Button } from 'react-native';
 import Profile from './Screens/Profile';
+import Map1 from './Screens/Map1';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -40,6 +41,7 @@ export const StackNav = () => {
       <Stack.Screen name='Home' component={Home}/>
           
        <Stack.Screen name='Login' component={LoginNav} options={{ headerShown: false }} />
+       <Stack.Screen name='Map1' component={Map1} options={{headerShown:false}} />
     </Stack.Navigator>
   );
 }
