@@ -6,7 +6,7 @@ import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplet
 import { FontAwesome } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-const API_KEY = "AIzaSyDxgAdwDaCyixQZ-GHZRxejom_NGRQ4s8M";
+const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
 const { width, height } = Dimensions.get('window');
 const ASPECT_RATIO = width / height;
 const LATITUDE_DELTA = 0.04;
@@ -70,12 +70,13 @@ const Map1 = () => {
       setModalVisible(false);
       setShowConfirmButton(false);
       Alert.alert('Location Confirmed', `Name: ${userName}\nMobile: ${userMobile}\nDelivery Time: ${startTime.toLocaleTimeString()} - ${endTime.toLocaleTimeString()}`);
+      console.log(locations);
+
     } else {
       Alert.alert('Error', 'Please fill all the fields');
     }
 
   };
-  console.log(locations);
 
   const handleCurrentLocation = async () => {
     let location = await Location.getCurrentPositionAsync({});
@@ -89,6 +90,12 @@ const Map1 = () => {
     setRegion(newRegion);
     setMarker({ latitude, longitude });
     mapRef.current.animateToRegion(newRegion, 1000);
+  };
+
+  const handleMapPress = (e) => {
+    const { latitude, longitude } = e.nativeEvent.coordinate;
+    setMarker({ latitude, longitude });
+    setShowConfirmButton(true);
   };
 
   return (
@@ -170,6 +177,7 @@ const Map1 = () => {
             initialRegion={region}
             showsUserLocation
             showsMyLocationButton={false}
+            onPress={handleMapPress}
           >
             {marker && (
               <Marker
