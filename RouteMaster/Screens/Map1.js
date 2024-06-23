@@ -1,10 +1,13 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, View, Dimensions, ActivityIndicator, Modal, Text, TextInput, Button, Alert, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { StyleSheet, View, Dimensions, ActivityIndicator, Text, TextInput, Button, Alert, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { BottomSheetModal, BottomSheetView, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
 const { width, height } = Dimensions.get('window');
@@ -26,6 +29,8 @@ const Map1 = () => {
   const [locations, setLocations] = useState([]); // Array to store location details
 
   const mapRef = useRef(null);
+  const bottomSheetModalRef = useRef(null);
+  const snapPoints = useMemo(() => ['25%', '50%'], []);
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -59,8 +64,8 @@ const Map1 = () => {
   const handleSubmit = () => {
     if (userName && userMobile && startTime && endTime) {
       const newLocation = {
-        userName,
-        userMobile,
+        name: userName,
+        phoneNumber:userMobile,
         startTime: startTime.toLocaleTimeString(),
         endTime: endTime.toLocaleTimeString(),
         latitude: marker.latitude,
@@ -71,11 +76,9 @@ const Map1 = () => {
       setShowConfirmButton(false);
       Alert.alert('Location Confirmed', `Name: ${userName}\nMobile: ${userMobile}\nDelivery Time: ${startTime.toLocaleTimeString()} - ${endTime.toLocaleTimeString()}`);
       console.log(locations);
-
     } else {
       Alert.alert('Error', 'Please fill all the fields');
     }
-
   };
 
   const handleCurrentLocation = async () => {
@@ -98,173 +101,239 @@ const Map1 = () => {
     setShowConfirmButton(true);
   };
 
+  const handlePresentModalPress = useCallback(() => {
+    bottomSheetModalRef.current?.present();
+  }, []);
+
+  const handleSaveRoute = async () => {
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  
+    try {
+      const token = await AsyncStorage.getItem('token');
+      // console.log(token)
+      if(token)console.log(token)
+        else console.log("No token")
+      const response = await fetch(`${apiUrl}/api/routes/addtwroute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'auth-token': token,
+        },
+        body: JSON.stringify({ locations }),
+      });
+  
+      const text = await response.text();
+      console.log('Response Text:', text);
+  
+      // Attempt to parse the response text as JSON
+      const data = JSON.parse(text);
+      console.log('Route added successfully:', data);
+    } catch (error) {
+      console.error('Error adding route:', error);
+    }
+  };
+  
+
+  const handleGetDirections = () => {
+    Alert.alert('Get Directions', 'Fetching directions for the selected route.');
+  };
+
   return (
-    <View style={styles.container}>
-      {region ? (
-        <>
-          <GooglePlacesAutocomplete
-            placeholder='Search'
-            onPress={(data, details = null) => {
-              const { lat, lng } = details.geometry.location;
-              const newRegion = {
-                latitude: lat,
-                longitude: lng,
-                latitudeDelta: LATITUDE_DELTA,
-                longitudeDelta: LONGITUDE_DELTA,
-              };
-              setRegion(newRegion);
-              setMarker({ latitude: lat, longitude: lng });
-              mapRef.current.animateToRegion(newRegion, 1000);
-              setShowConfirmButton(true);
-            }}
-            query={{
-              key: API_KEY,
-              language: 'en',
-              components: 'country:in'
-            }}
-            enablePoweredByContainer={false}
-            fetchDetails={true}
-            styles={{
-              container: { 
-                position: 'absolute', 
-                width: '100%', 
-                zIndex: 1, 
-                paddingHorizontal: 10, 
-                paddingTop: 20 
-              },
-              textInputContainer: {
-                backgroundColor: 'rgba(0,0,0,0)',
-                borderTopWidth: 0,
-                borderBottomWidth: 0,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.8,
-                shadowRadius: 2,
-                elevation: 1,
-                marginBottom: 20,
-              },
-              textInput: {
-                backgroundColor: '#fff',
-                borderRadius: 20,
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                fontSize: 16,
-              },
-              listView: { 
-                backgroundColor: 'white', 
-                borderRadius: 20, 
-                marginHorizontal: 10, 
-              },
-              row: { 
-                backgroundColor: '#fff', 
-                padding: 13, 
-                height: 44, 
-                flexDirection: 'row', 
-              },
-              separator: {
-                height: 0.5,
-                backgroundColor: '#c8c7cc',
-              },
-              description: {
-                fontSize: 15,
-                color: '#000',
-              },
-            }}
-          />
-          <MapView
-            ref={mapRef}
-            style={StyleSheet.absoluteFill}
-            initialRegion={region}
-            showsUserLocation
-            showsMyLocationButton={false}
-            onPress={handleMapPress}
-          >
-            {marker && (
-              <Marker
-                draggable
-                coordinate={marker}
-                onDragEnd={(e) => setMarker(e.nativeEvent.coordinate)}
+    <BottomSheetModalProvider>
+      <View style={styles.container}>
+        {region ? (
+          <>
+            <GooglePlacesAutocomplete
+              placeholder='Search'
+              onPress={(data, details = null) => {
+                const { lat, lng } = details.geometry.location;
+                const newRegion = {
+                  latitude: lat,
+                  longitude: lng,
+                  latitudeDelta: LATITUDE_DELTA,
+                  longitudeDelta: LONGITUDE_DELTA,
+                };
+                setRegion(newRegion);
+                setMarker({ latitude: lat, longitude: lng });
+                mapRef.current.animateToRegion(newRegion, 1000);
+                setShowConfirmButton(true);
+              }}
+              query={{
+                key: API_KEY,
+                language: 'en',
+                components: 'country:in'
+              }}
+              enablePoweredByContainer={false}
+              fetchDetails={true}
+              styles={{
+                container: { 
+                  position: 'absolute', 
+                  width: '100%', 
+                  zIndex: 1, 
+                  paddingHorizontal: 10, 
+                  paddingTop: 20 
+                },
+                textInputContainer: {
+                  backgroundColor: 'rgba(0,0,0,0)',
+                  borderTopWidth: 0,
+                  borderBottomWidth: 0,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.8,
+                  shadowRadius: 2,
+                  elevation: 1,
+                  marginBottom: 20,
+                },
+                textInput: {
+                  backgroundColor: '#fff',
+                  borderRadius: 20,
+                  paddingVertical: 10,
+                  paddingHorizontal: 20,
+                  fontSize: 16,
+                },
+                listView: { 
+                  backgroundColor: 'white', 
+                  borderRadius: 20, 
+                  marginHorizontal: 10, 
+                },
+                row: { 
+                  backgroundColor: '#fff', 
+                  padding: 13, 
+                  height: 44, 
+                  flexDirection: 'row', 
+                },
+                separator: {
+                  height: 0.5,
+                  backgroundColor: '#c8c7cc',
+                },
+                description: {
+                  fontSize: 15,
+                  color: '#000',
+                },
+              }}
+            />
+            <MapView
+              ref={mapRef}
+              style={StyleSheet.absoluteFill}
+              initialRegion={region}
+              showsUserLocation
+              showsMyLocationButton={false}
+              onPress={handleMapPress}
+            >
+              {marker && (
+                <Marker
+                  draggable
+                  coordinate={marker}
+                  onDragEnd={(e) => setMarker(e.nativeEvent.coordinate)}
+                />
+              )}
+              {locations.map((location, index) => (
+                <Marker
+                  key={index}
+                  coordinate={{ latitude: location.latitude, longitude: location.longitude }}
+                  title={location.userName}
+                  description={`Mobile: ${location.userMobile}\nDelivery Time: ${location.startTime} - ${location.endTime}`}
+                />
+              ))}
+            </MapView>
+            {showConfirmButton && (
+              <View style={styles.buttonContainer}>
+                <Button title="Confirm Location" onPress={handleConfirmLocation} />
+              </View>
+            )}
+            {locations.length > 0 ? (
+              <TouchableOpacity style={styles.modalButton} onPress={handlePresentModalPress}>
+                <Ionicons name="information-circle" size={24} color="white" />
+              </TouchableOpacity>
+            ) : null}
+            <TouchableOpacity style={styles.currentLocationButton} onPress={handleCurrentLocation}>
+              <FontAwesome name="location-arrow" size={24} color="white" />
+            </TouchableOpacity>
+          </>
+        ) : (
+          <View style={styles.loading}>
+            <ActivityIndicator size="large" color="#0000ff" />
+          </View>
+        )}
+        <BottomSheetModal
+          ref={bottomSheetModalRef}
+          index={1}
+          snapPoints={snapPoints}
+        >
+          <BottomSheetView style={styles.contentContainer}>
+            <Text style={styles.sheetTitle}>Saved Locations</Text>
+            <ScrollView contentContainerStyle={styles.scrollViewContent}>
+              {locations.map((location, index) => (
+                <View key={index} style={styles.locationItem}>
+                  <Text style={styles.locationText}>{location.name}</Text>
+                  <Text style={styles.locationText}>{location.phoneNumber}</Text>
+                  <Text style={styles.locationText}>{`${location.startTime} - ${location.endTime}`}</Text>
+                </View>
+              ))}
+            </ScrollView>
+            <View style={styles.buttonGroup}>
+              <Button title="Save Route" onPress={handleSaveRoute} />
+              <Button title="Get Directions" onPress={handleGetDirections} />
+            </View>
+          </BottomSheetView>
+        </BottomSheetModal>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => {
+            setModalVisible(!modalVisible);
+          }}
+        >
+          <View style={styles.modalView}>
+            <TextInput
+              style={styles.input}
+              placeholder="Name"
+              value={userName}
+              onChangeText={setUserName}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Mobile"
+              value={userMobile}
+              onChangeText={setUserMobile}
+              keyboardType="phone-pad"
+            />
+            <TouchableOpacity onPress={() => setShowStartPicker(true)}>
+              <Text style={styles.timeText}>Start Time: {startTime.toLocaleTimeString()}</Text>
+            </TouchableOpacity>
+            {showStartPicker && (
+              <DateTimePicker
+                value={startTime}
+                mode="time"
+                is24Hour={false}
+                display="default"
+                onChange={(event, selectedTime) => {
+                  setShowStartPicker(false);
+                  setStartTime(selectedTime || startTime);
+                }}
               />
             )}
-            {locations.map((location, index) => (
-              <Marker
-                key={index}
-                coordinate={{ latitude: location.latitude, longitude: location.longitude }}
-                title={location.userName}
-                description={`Mobile: ${location.userMobile}\nDelivery Time: ${location.startTime} - ${location.endTime}`}
+            <TouchableOpacity onPress={() => setShowEndPicker(true)}>
+              <Text style={styles.timeText}>End Time: {endTime.toLocaleTimeString()}</Text>
+            </TouchableOpacity>
+            {showEndPicker && (
+              <DateTimePicker
+                value={endTime}
+                mode="time"
+                is24Hour={false}
+                display="default"
+                onChange={(event, selectedTime) => {
+                  setShowEndPicker(false);
+                  setEndTime(selectedTime || endTime);
+                }}
               />
-            ))}
-          </MapView>
-          {showConfirmButton && (
-            <View style={styles.buttonContainer}>
-              <Button title="Confirm Location" onPress={handleConfirmLocation} />
-            </View>
-          )}
-          <TouchableOpacity style={styles.currentLocationButton} onPress={handleCurrentLocation}>
-            <FontAwesome name="location-arrow" size={24} color="white" />
-          </TouchableOpacity>
-        </>
-      ) : (
-        <View style={styles.loading}>
-          <ActivityIndicator size="large" color="#0000ff" />
-        </View>
-      )}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(!modalVisible);
-        }}
-      >
-        <View style={styles.modalView}>
-          <TextInput
-            style={styles.input}
-            placeholder="Name"
-            value={userName}
-            onChangeText={setUserName}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Mobile"
-            value={userMobile}
-            onChangeText={setUserMobile}
-            keyboardType="phone-pad"
-          />
-          <TouchableOpacity onPress={() => setShowStartPicker(true)}>
-            <Text style={styles.timeText}>Start Time: {startTime.toLocaleTimeString()}</Text>
-          </TouchableOpacity>
-          {showStartPicker && (
-            <DateTimePicker
-              value={startTime}
-              mode="time"
-              is24Hour={false}
-              display="default"
-              onChange={(event, selectedTime) => {
-                setShowStartPicker(false);
-                setStartTime(selectedTime || startTime);
-              }}
-            />
-          )}
-          <TouchableOpacity onPress={() => setShowEndPicker(true)}>
-            <Text style={styles.timeText}>End Time: {endTime.toLocaleTimeString()}</Text>
-          </TouchableOpacity>
-          {showEndPicker && (
-            <DateTimePicker
-              value={endTime}
-              mode="time"
-              is24Hour={false}
-              display="default"
-              onChange={(event, selectedTime) => {
-                setShowEndPicker(false);
-                setEndTime(selectedTime || endTime);
-              }}
-            />
-          )}
-          <Button title="Submit" onPress={handleSubmit} />
-        </View>
-      </Modal>
-    </View>
+            )}
+            <Button title="Submit" onPress={handleSubmit} />
+          </View>
+        </Modal>
+      </View>
+    </BottomSheetModalProvider>
   );
 };
 
@@ -292,6 +361,45 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  modalButton: {
+    position: 'absolute',
+    bottom: 150,
+    right: 20,
+    backgroundColor: 'green',
+    padding: 15,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  contentContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 10,
+  },
+  scrollViewContent: {
+    paddingBottom: 20,
+  },
+  locationItem: {
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    width: '90%',
+  },
+  locationText: {
+    fontSize: 16,
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 20,
   },
   modalView: {
     flex: 1,
