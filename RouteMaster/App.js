@@ -7,8 +7,8 @@ import Register from './Screens/Login&Register/Register';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
+import RoutesState from './context/routes/RoutesState';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
 
 const toastConfig = {
   success: props => (
@@ -82,12 +82,14 @@ export default function App() {
     },[]);
 
   return (
+    <RoutesState>
     <GestureHandlerRootView>
     <NavigationContainer>
       {isLoggedIn?<TabNav signOut={signOut}/>:<LoginNav setIsLoggedIn={setIsLoggedIn}/>}
       <Toast config={toastConfig}/>
     </NavigationContainer>
     </GestureHandlerRootView>
+    </RoutesState>
   );
 }
 
