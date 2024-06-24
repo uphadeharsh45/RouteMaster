@@ -18,7 +18,9 @@ const UserSchema = new Schema({
    date:{
     type:Date,
     default:Date.now
-   }
+   },
+   image:String,
+   gender:String
   });
 
 const User=mongoose.model('user',UserSchema);

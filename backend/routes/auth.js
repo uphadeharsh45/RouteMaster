@@ -35,7 +35,9 @@ router.post('/createuser', [
             name: req.body.name,
             password: secPass,
             email: req.body.email,
-            mobile:req.body.mobile
+            mobile:req.body.mobile,
+            image:'',
+            gender:''
         })
 
         const data = {
@@ -108,5 +110,51 @@ try {
     res.status(500).send("Internal Server error");
 }
 })
+
+
+router.post("/userdata", async (req, res) => {
+    const { token } = req.body;
+    try {
+      const data = jwt.verify(token, JWT_SECRET);
+        const user=data.user
+      console.log(user)
+      const userId = user.id;
+  
+      User.findById(userId).then((data) => {
+        if (!data) {
+          return res.status(404).send({ error: "User not found" });
+        }
+        return res.status(200).send({ status: "Ok", data: data });
+      }).catch(err => {
+        console.error("Error finding user:", err);
+        return res.status(500).send({ error: "Internal server error" });
+      });
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return res.status(401).send({ error: "Invalid token" });
+    }
+  });
+  
+
+  router.post("/update-user", async (req, res) => {
+    const { name, email, mobile, image, gender } = req.body;
+    try {
+      await User.updateOne(
+        { email: email },
+        {
+          $set: {
+            name,
+            mobile,
+            image,
+            gender,
+          },
+        }
+      );
+      res.send({ status: "Ok", data: "Updated" });
+    } catch (error) {
+      return res.send({ error: error.message });
+    }
+  });
+  
 
 module.exports = router
