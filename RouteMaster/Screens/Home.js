@@ -44,8 +44,10 @@ const Home = () => {
     <View style={styles.viewStyle}>
         <Text style={styles.headingStyle}>React Native Navigation</Text>
         <Text style={styles.textStyle}>This is Home Screen</Text>    
-        <Button title='Map page' 
+        <Button title='Map1 page' 
         onPress={() => navigation.navigate('Map1')}/>   
+        <Button title='Map2 page' 
+        onPress={() => navigation.navigate('Map2')}/>   
     </View>
   )
 }

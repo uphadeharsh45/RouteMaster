@@ -205,6 +205,17 @@ router.put('/updatetime/:routeId/:customerId',fetchuser, async (req, res) => {
     }
 });
 
+router.get('/fetchalltwroutes', fetchuser, async (req, res) => {
+  try {
+      const routes = await TWRoutes.find({ user: req.user.id })
+      res.json(routes)
+  } catch (err) {
+      console.log(err.message);
+      res.status(500).send("Internal Server error");
+  }
+
+})
+
 
 
 module.exports = router
