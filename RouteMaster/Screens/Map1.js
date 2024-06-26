@@ -7,6 +7,8 @@ import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { BottomSheetModal, BottomSheetView, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import MapViewDirections from 'react-native-maps-directions';
+
 
 
 const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
@@ -14,6 +16,7 @@ const { width, height } = Dimensions.get('window');
 const ASPECT_RATIO = width / height;
 const LATITUDE_DELTA = 0.04;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 const Map1 = () => {
   const [region, setRegion] = useState(null);
@@ -27,6 +30,9 @@ const Map1 = () => {
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [showConfirmButton, setShowConfirmButton] = useState(false);
   const [locations, setLocations] = useState([]); // Array to store location details
+  const [cl,setCL]=useState(null);
+  const [optimizedRoute, setOptimizedRoute] = useState(null);
+
 
   const mapRef = useRef(null);
   const bottomSheetModalRef = useRef(null);
@@ -42,6 +48,7 @@ const Map1 = () => {
 
       let location = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = location.coords;
+      setCL({latitude:latitude,longitude:longitude});
       setRegion({
         latitude,
         longitude,
@@ -61,20 +68,26 @@ const Map1 = () => {
     setModalVisible(true);
   };
 
+  const formatTime = (date) => {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
   const handleSubmit = () => {
     if (userName && userMobile && startTime && endTime) {
       const newLocation = {
         name: userName,
         phoneNumber:userMobile,
-        startTime: startTime.toLocaleTimeString(),
-        endTime: endTime.toLocaleTimeString(),
+        startTime: formatTime(startTime),
+        endTime: formatTime(endTime),
         latitude: marker.latitude,
         longitude: marker.longitude,
       };
       setLocations([...locations, newLocation]);
       setModalVisible(false);
       setShowConfirmButton(false);
-      Alert.alert('Location Confirmed', `Name: ${userName}\nMobile: ${userMobile}\nDelivery Time: ${startTime.toLocaleTimeString()} - ${endTime.toLocaleTimeString()}`);
+      Alert.alert('Location Confirmed', `Name: ${userName}\nMobile: ${userMobile}\nDelivery Time: ${formatTime(startTime)} - ${formatTime(endTime)}`);
       console.log(locations);
     } else {
       Alert.alert('Error', 'Please fill all the fields');
@@ -133,9 +146,70 @@ const Map1 = () => {
     }
   };
   
+  const removeLeadingZeros = (time) => {
+    return time.split(':').map(part => String(Number(part))).join(':');
+  };
 
-  const handleGetDirections = () => {
-    Alert.alert('Get Directions', 'Fetching directions for the selected route.');
+  const getCurrentTime = () => {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const handleGetDirections = async() => {
+    const latLongArray = locations.map(location => ({
+      latitude: location.latitude,
+      longitude: location.longitude,
+    }));
+  
+    // Append the current location to the beginning of the array
+    if (cl) {
+      latLongArray.unshift(cl);
+    } else {
+      console.log('Current location not available');
+    }
+  
+    const currentFormattedTime = removeLeadingZeros(getCurrentTime());
+    const timeWindows = [
+      [
+        removeLeadingZeros(getCurrentTime()), // Current time
+     "23:24"// Current time + 3 hours
+      ],
+      ...locations.map(location => [
+        removeLeadingZeros(location.startTime),
+        removeLeadingZeros(location.endTime),
+      ]),
+    ];
+  
+    console.log('Latitude and Longitude Array:', latLongArray);
+    console.log('Time Windows Array:', timeWindows);
+
+    const requestData = {
+      locations: latLongArray,
+      timeWindows:timeWindows,
+      numVehicles: 1,
+      startTime: currentFormattedTime,
+    };
+    try {
+      const response = await fetch(`${apiUrl}/get-travel-times`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      const data = await response.json();
+      const optimizedRouteCoordinates = data[0].map(index => latLongArray[index]);
+
+      // Store the optimized route coordinates
+      setOptimizedRoute(optimizedRouteCoordinates);
+      console.log('Optimized Route:', data);
+    } catch (error) {
+      console.error('Error fetching optimized route:', error);
+    }
+
   };
 
   return (
@@ -235,6 +309,26 @@ const Map1 = () => {
                   description={`Mobile: ${location.userMobile}\nDelivery Time: ${location.startTime} - ${location.endTime}`}
                 />
               ))}
+              {optimizedRoute && (
+              <MapViewDirections
+                origin={optimizedRoute[0]}
+                destination={optimizedRoute[optimizedRoute.length - 1]}
+                waypoints={optimizedRoute.slice(1, -1)}
+                apikey={API_KEY}
+                strokeWidth={3}
+                strokeColor="hotpink"
+                onStart={(params) => {
+                  console.log(`Started routing between "${params.origin}" and "${params.destination}"`);
+                }}
+                onReady={result => {
+                  console.log(`Distance: ${result.distance} km`);
+                  console.log(`Duration: ${result.duration} min.`);
+                }}
+                onError={(errorMessage) => {
+                  console.error(errorMessage);
+                }}
+              />
+            )}
             </MapView>
             {showConfirmButton && (
               <View style={styles.buttonContainer}>
@@ -300,7 +394,7 @@ const Map1 = () => {
               keyboardType="phone-pad"
             />
             <TouchableOpacity onPress={() => setShowStartPicker(true)}>
-              <Text style={styles.timeText}>Start Time: {startTime.toLocaleTimeString()}</Text>
+              <Text style={styles.timeText}>Start Time: {formatTime(startTime)}</Text>
             </TouchableOpacity>
             {showStartPicker && (
               <DateTimePicker
@@ -315,7 +409,7 @@ const Map1 = () => {
               />
             )}
             <TouchableOpacity onPress={() => setShowEndPicker(true)}>
-              <Text style={styles.timeText}>End Time: {endTime.toLocaleTimeString()}</Text>
+              <Text style={styles.timeText}>End Time: {formatTime(endTime)}</Text>
             </TouchableOpacity>
             {showEndPicker && (
               <DateTimePicker
