@@ -27,6 +27,7 @@ const SavedRoutes = () => {
 
   return (
     <View style={styles.main}>
+      <StatusBar backgroundColor='#34A751' barStyle='light-content' />
       <View style={styles.header}>
         <Text style={styles.nameText}>Saved Routes</Text>
       </View>

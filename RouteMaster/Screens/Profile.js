@@ -6,7 +6,8 @@ import {
   TextInput,
   ScrollView,
   Dimensions,
-  StyleSheet
+  StyleSheet,
+  StatusBar
 } from 'react-native';
 import { Avatar, RadioButton } from 'react-native-paper';
 import Back from '@expo/vector-icons/Ionicons';
@@ -126,6 +127,7 @@ const Profile = ({ signOut }) => {
 
   return (
     <View style={styles.main}>
+      <StatusBar backgroundColor='#34A751' barStyle='light-content' />
     <ScrollView
       keyboardShouldPersistTaps={'always'}
       showsVerticalScrollIndicator={false}
