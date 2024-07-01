@@ -125,17 +125,18 @@ const Profile = ({ signOut }) => {
   };
 
   return (
+    <View style={styles.main}>
     <ScrollView
       keyboardShouldPersistTaps={'always'}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 40 }}>
+      contentContainerStyle={{ paddingBottom: 40}}>
       <View>
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
             <Back name="arrow-back" size={30} style={styles.backIcon} />
           </View>
           <View style={{ flex: 3 }}>
-            <Text style={styles.nameText}>Edit Profile</Text>
+            <Text style={styles.nameText}>Profile</Text>
           </View>
           <View style={{ flex: 1 }}></View>
         </View>
@@ -159,10 +160,7 @@ const Profile = ({ signOut }) => {
         </View>
 
         <View
-          style={{
-            marginTop: 50,
-            marginHorizontal: 22,
-          }}>
+          style={styles.form}>
           <View style={styles.infoEditView}>
             <Text style={styles.infoEditFirst_text}>Username</Text>
             <TextInput
@@ -193,6 +191,7 @@ const Profile = ({ signOut }) => {
               <View style={styles.radioView}>
                 <Text style={styles.radioText}>Male</Text>
                 <RadioButton
+                  color='#34A751'
                   value="Male"
                   status={gender === 'Male' ? 'checked' : 'unchecked'}
                   onPress={() => {
@@ -203,6 +202,7 @@ const Profile = ({ signOut }) => {
               <View style={styles.radioView}>
                 <Text style={styles.radioText}>Female</Text>
                 <RadioButton
+                  color='#34A751'
                   value="Female"
                   status={gender === 'Female' ? 'checked' : 'unchecked'}
                   onPress={() => {
@@ -244,10 +244,15 @@ const Profile = ({ signOut }) => {
         </View>
       </View>
     </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  main:{
+    backgroundColor:'#FFF6E9',
+    height:'100%'
+  },
   loading: {
     flex: 1,
     position: 'absolute',
@@ -264,25 +269,25 @@ const styles = StyleSheet.create({
   },
   button: {
     alignItems: 'center',
-    marginTop: 0,
+    alignItems: 'center',
     textAlign: 'center',
-    marginTop: 30,
+    marginTop: 15
   },
   textSign: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: 'white',
   },
   inBut: {
-    width: '70%',
-    backgroundColor: '#0163D2',
+    width: '50%',
+    backgroundColor: '#18b152',
     alignItems: 'center',
     paddingHorizontal: 15,
-    paddingVertical: 15,
-    borderRadius: 50,
+    paddingVertical: 10,
+    borderRadius: 20,
   },
   header: {
-    backgroundColor: '#0163D2',
+    backgroundColor: '#34A751',
     flexDirection: 'row',
     height: 60,
     justifyContent: 'center',
@@ -290,12 +295,12 @@ const styles = StyleSheet.create({
   },
   avatar: {
     borderRadius: 80,
-    marginTop: 50,
+    marginTop: 30,
     backgroundColor: 'white',
     height: 160,
     width: 160,
     padding: 8,
-    borderColor: '#ccc',
+    borderColor: '#F0BF72',
     borderWidth: 1,
     elevation: 4,
     justifyContent: 'center',
@@ -313,7 +318,7 @@ const styles = StyleSheet.create({
     bottom: 5,
     height: 36,
     width: 36,
-    backgroundColor: '#0163D2',
+    backgroundColor: '#34A751',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 18,
@@ -324,6 +329,17 @@ const styles = StyleSheet.create({
   backIcon: {
     marginLeft: 20,
     color: 'white',
+  },
+  form:{
+    width:'90%',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 40,
+    margin:20,
+    shadowColor:'gold',
+    elevation:2,
+    shadowOpacity:1
   },
   nameText: {
     color: 'white',
@@ -342,7 +358,7 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
   infoEditFirst_text: {
-    color: '#7d7c7c',
+    color: '#34A751',
     fontSize: 16,
     fontWeight: '400',
   },
