@@ -101,3 +101,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+
+{/* <Tab.Screen name="Home" component={StackNav}
+options={{
+  tabBarIcon:({focused})=>(
+    focused?
+    <Ionicons name="home" size={24} color='#34A751' />
+    :
+    <Ionicons name="home-outline" size={24} color='black' />
+  )
+}}/>
+
+<Tab.Screen name="SavedRoutes" component={SavedRoutes} 
+options={{
+  tabBarIcon:({focused})=>(
+    <FontAwesome5 name="route" size={24} color={focused ? '#34A751' :'black'} />
+  )
+}} />
+<Tab.Screen name="Profile" 
+options={{
+  tabBarIcon:({focused})=>(
+    focused?
+    <FontAwesome name="user" size={24} color='#34A751' />
+    :
+    <FontAwesome name="user-o" size={24} color='black' />
+  )
+}}>
+{props => <Profile {...props} signOut={signOut} />}
+</Tab.Screen> */}

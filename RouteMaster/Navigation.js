@@ -11,20 +11,46 @@ import { Button } from 'react-native';
 import Profile from './Screens/Profile';
 import Map1 from './Screens/Map1';
 import Map2 from './Screens/Map2';
+import { Ionicons, FontAwesome5, FontAwesome } from '@expo/vector-icons';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 export const TabNav = ({signOut}) => {
   return (
-    <Tab.Navigator initialRouteName='Home' screenOptions={{ headerShown: false }}>
-      <Tab.Screen name="Home" component={StackNav}/>
+    <Tab.Navigator initialRouteName='Home' 
+    screenOptions={{
+      headerShown: false,
+      tabBarActiveTintColor:'#34A751',
+    }}
+    >
+      <Tab.Screen name="Home" component={StackNav}
+        options={{
+          tabBarIcon:({focused})=>(
+            focused?
+            <Ionicons name="home" size={24} color='#34A751' />
+            :
+            <Ionicons name="home-outline" size={24} color='black' />
+          )
+        }}/>
         
-      <Tab.Screen name="SavedRoutes" component={SavedRoutes} />
-      <Tab.Screen name="Profile">
+      <Tab.Screen name="SavedRoutes" component={SavedRoutes} 
+        options={{
+          tabBarIcon:({focused})=>(
+            <FontAwesome5 name="route" size={24} color={focused ? '#34A751' :'black'} />
+          )
+        }} />
+      <Tab.Screen name="Profile" 
+        options={{
+          tabBarIcon:({focused})=>(
+            focused?
+            <FontAwesome name="user" size={24} color='#34A751' />
+            :
+            <FontAwesome name="user-o" size={24} color='black' />
+          )
+        }}>
         {props => <Profile {...props} signOut={signOut} />}
       </Tab.Screen>
-
     </Tab.Navigator>
   );
 }
@@ -32,9 +58,8 @@ export const TabNav = ({signOut}) => {
 export const StackNav = () => {
   return (
     <Stack.Navigator initialRouteName='Home' screenOptions={{
-      statusBarColor: '#0163d2',
       headerStyle: {
-        backgroundColor: '#0163d2'
+        backgroundColor: '#34A751'
       },
       headerTintColor: 'white',
       headerTitleAlign: "center",
