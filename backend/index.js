@@ -41,7 +41,7 @@ app.listen(port, () => {
 })
 
 async function getTravelTimes(locations) {
-  const apiKey = 'AIzaSyAef51lrPHtVox58b8ddEtxGlClxXnxQ7A';
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   const origins = locations.map(loc => `${loc.latitude},${loc.longitude}`).join('|');
   const destinations = origins;
 

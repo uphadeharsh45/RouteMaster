@@ -22,7 +22,7 @@ import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import {
-  FontAwesome,
+  FontAwesome5,
   FontAwesome6,
   Ionicons,
   Entypo,
@@ -36,6 +36,9 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MapViewDirections from "react-native-maps-directions";
 import greenmarker4 from "../assets/greenmarker4.png";
+import Toast from "react-native-toast-message";
+import CustomMarker from "../components/CustomMarker";
+
 
 const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
 const { width, height } = Dimensions.get("window");
@@ -58,9 +61,15 @@ const Map1 = () => {
   const [locations, setLocations] = useState([]); // Array to store location details
   const [cl, setCL] = useState(null);
   const [optimizedRoute, setOptimizedRoute] = useState(null);
+  const [optimizeWayPoints,setOptimizeWaypoints]=useState(false);
+  const [markersWithOrder, setMarkersWithOrder] = useState([]);
+  const [textualDirections, setTextualDirections] = useState([]);
+const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
+
 
   const mapRef = useRef(null);
   const bottomSheetModalRef = useRef(null);
+  const directionsModalRef=useRef(null);
   const snapPoints = useMemo(() => ["25%", "50%"], []);
 
   useEffect(() => {
@@ -92,6 +101,37 @@ const Map1 = () => {
   const handleConfirmLocation = () => {
     setModalVisible(true);
   };
+
+  const toggleDirectionsModal = () => {
+    setDirectionsModalVisible(true);
+  };
+
+  const handleTextDirectons=async()=>{
+    await fetchTextualDirections();
+    handlePresentDirectionsModalPress();
+  }
+
+  const fetchTextualDirections = async () => {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${optimizedRoute[0].latitude},${optimizedRoute[0].longitude}&destination=${optimizedRoute[optimizedRoute.length - 1].latitude},${optimizedRoute[optimizedRoute.length - 1].longitude}&waypoints=${optimizedRoute
+          .slice(1, -1)
+          .map(
+            (coordinate) =>
+              `via:${coordinate.latitude},${coordinate.longitude}`
+          )
+          .join("|")}&key=${API_KEY}`
+      );
+      const data = await response.json();
+      console.log("Textual Directions:", data.routes[0].legs);
+      setTextualDirections(data.routes[0].legs);
+      
+      
+    } catch (error) {
+      console.error("Error fetching textual directions:", error);
+    }
+  };
+  
 
   const formatTime = (date) => {
     const hours = date.getHours().toString().padStart(2, "0");
@@ -146,6 +186,12 @@ const Map1 = () => {
 
   const handlePresentModalPress = useCallback(() => {
     bottomSheetModalRef.current?.present();
+  }, []);
+  const handleCloseModalPress = useCallback(() => {
+    bottomSheetModalRef.current?.dismiss();
+  }, []);
+  const handlePresentDirectionsModalPress = useCallback(() => {
+    directionsModalRef.current?.present();
   }, []);
 
   const handleSaveRoute = async () => {
@@ -234,12 +280,38 @@ const Map1 = () => {
       });
 
       const data = await response.json();
-      const optimizedRouteCoordinates = data[0].map(
-        (index) => latLongArray[index]
-      );
+      if(!data)
+        {
+          setOptimizeWaypoints(true);
+          setOptimizedRoute(latLongArray);
+          Toast.show({
+            type: "error",
+            text1: "No possible path",
+            text2: "Showing shortest possible path",
+            visibilityTime: 5000,
+          });
+          toggleDirectionsModal();
+          handleCloseModalPress();
+
+          
+          return ;
+        }
+        const optimizedRouteCoordinates = data[0]
+      .map((index) => latLongArray[index])
+      .slice(0, -1); 
 
       // Store the optimized route coordinates
       setOptimizedRoute(optimizedRouteCoordinates);
+
+      const markersWithOrder = optimizedRouteCoordinates.map((coordinate, index) => ({
+        ...coordinate,
+        order: index + 1, // Add order property
+      }));
+  
+        setMarkersWithOrder(markersWithOrder);
+        toggleDirectionsModal();
+        handleCloseModalPress(); 
+
       console.log("Optimized Route:", data);
     } catch (error) {
       console.error("Error fetching optimized route:", error);
@@ -343,7 +415,16 @@ const Map1 = () => {
                   onDragEnd={(e) => setMarker(e.nativeEvent.coordinate)}
                 />
               )}
-              {locations.map((location, index) => (
+
+              {optimizedRoute && (markersWithOrder.map((marker, index) => (
+                  <CustomMarker
+                    key={index}
+                    coordinate={marker}
+                    order={marker.order}
+                  />
+                )))}
+
+              { locations.map((location, index) => (
                 <Marker
                   image={greenmarker4}
                   key={index}
@@ -362,7 +443,8 @@ const Map1 = () => {
                   waypoints={optimizedRoute.slice(1, -1)}
                   apikey={API_KEY}
                   strokeWidth={3}
-                  strokeColor="hotpink"
+                  strokeColor="black"
+                  optimizeWaypoints={optimizeWayPoints}
                   onStart={(params) => {
                     console.log(
                       `Started routing between "${params.origin}" and "${params.destination}"`
@@ -371,6 +453,14 @@ const Map1 = () => {
                   onReady={(result) => {
                     console.log(`Distance: ${result.distance} km`);
                     console.log(`Duration: ${result.duration} min.`);
+                    mapRef.current.fitToCoordinates(result.coordinates,{
+                      edgePadding:{
+                        right:30,
+                        bottom:300,
+                        left:30,
+                        top:100
+                      }
+                    })
                   }}
                   onError={(errorMessage) => {
                     console.error(errorMessage);
@@ -390,6 +480,14 @@ const Map1 = () => {
                 </TouchableOpacity>
               </View>
             )}
+            {directionsModalVisible ? (
+              <TouchableOpacity
+                style={styles.directionsButton}
+                onPress={handleTextDirectons}
+              >
+                <FontAwesome5 name="directions" size={24} color="white" />
+              </TouchableOpacity>
+            ) : null}
             {locations.length > 0 ? (
               <TouchableOpacity
                 style={styles.modalButton}
@@ -457,6 +555,45 @@ const Map1 = () => {
             </View>
           </BottomSheetView>
         </BottomSheetModal>
+       {textualDirections && (<BottomSheetModal
+  backgroundStyle={{ backgroundColor: "#FFF6E9" }}
+  ref={directionsModalRef}
+
+  snapPoints={["10%", "50%"]}
+  dismissOnPanDown={true}
+  onChange={(index) => {
+    if (index === -1) {
+      setTextualDirections([]);
+    }
+  }}
+>
+  <BottomSheetView style={styles.contentContainer}>
+    <Text style={styles.sheetTitle}>TEXTUAL DIRECTIONS</Text>
+    <ScrollView contentContainerStyle={styles.scrollViewContent}>
+      {textualDirections.map((leg, index) => (
+        <View key={index} style={styles.locationItem}>
+          <Text style={styles.locationText}>
+            {leg.start_address} {"->"} {leg.end_address}
+          </Text>
+          <Text style={styles.locationText}>
+            Distance: {leg.distance.text}
+          </Text>
+          <Text style={styles.locationText}>
+            Duration: {leg.duration.text}
+          </Text>
+          <Text style={styles.locationText}>
+            Steps:
+          </Text>
+          {leg.steps.map((step, stepIndex) => (
+            <Text key={stepIndex} style={styles.locationText}>
+              {step.html_instructions.replace(/<[^>]*>/g, "")}
+            </Text>
+          ))}
+        </View>
+      ))}
+    </ScrollView>
+  </BottomSheetView>
+</BottomSheetModal>)}
         <Modal
           animationType="slide"
           transparent={true}
@@ -574,6 +711,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  directionsButton: {
+    position: "absolute",
+    bottom: 220,
+    right: 20,
+    backgroundColor: "#34A751",
+    padding: 15,
+    borderRadius: 50,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   contentContainer: {
     flex: 1,
     padding:1,
@@ -681,6 +828,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "grey",
     textAlign: "center",
+  },
+  orderMarker: {
+    backgroundColor: 'white',
+    padding: 5,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: 'black',
+  },
+  orderText: {
+    fontWeight: 'bold',
+    color: 'black',
   },
 });
 
