@@ -26,6 +26,7 @@ import {
   FontAwesome6,
   Ionicons,
   Entypo,
+  MaterialIcons
 } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import {
@@ -425,6 +426,7 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
                   shadowRadius: 2,
                   elevation: 0,
                   marginBottom: 20,
+                  top:10
                 },
                 textInput: {
                   backgroundColor: "#fff",
@@ -579,6 +581,12 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
             <Text style={styles.sheetTitle}>SAVED LOCATIONS</Text>
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
               {locations.map((location, index) => (
+                <View style={{flexDirection:'row'}}>
+                  <View style={{marginTop:5,marginRight:-5}}>
+                  <TouchableOpacity>
+                  <MaterialIcons name="delete" size={24} color="black" style={{marginEnd:10}} />
+                  </TouchableOpacity>
+                  </View>
                 <View key={index} style={styles.locationItem}>
                   <Text style={styles.locationText}>NAME: {location.name}</Text>
                   <Text style={styles.locationText}>
@@ -587,6 +595,7 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
                   <Text
                     style={styles.locationText}
                   >{`${location.startTime} - ${location.endTime}`}</Text>
+                </View>
                 </View>
               ))}
             </ScrollView>
@@ -625,27 +634,69 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
   }}
 >
   <BottomSheetView style={styles.contentContainer}>
-    <Button onPress={handleSMS} title="send sms"></Button>
+    <View style={{flexDirection:'row'}}>
+      <TouchableOpacity
+        style={styles.bottominBut2}
+      >
+        <View>
+          <Text style={styles.textSign}>START</Text>
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.bottominBut2}
+        onPress={handleSMS}
+      >
+        <View>
+          <Text style={styles.textSign}>SEND SMS</Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+    {/* <Button onPress={handleSMS} title="send sms"></Button> */}
     <Text style={styles.sheetTitle}>TEXTUAL DIRECTIONS</Text>
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
       {textualDirections.map((leg, index) => (
-        <View key={index} style={styles.locationItem}>
-          <Text style={styles.locationText}>
-            {leg.start_address} {"->"} {leg.end_address}
+        <View key={index} style={styles.heading}>
+          <View style={{margin:2}}>
+          <Text style={styles.Text1}>
+            Source:
           </Text>
-          <Text style={styles.locationText}>
-            Distance: {leg.distance.text}
+          <Text style={styles.box}>
+            {leg.start_address}
           </Text>
-          <Text style={styles.locationText}>
-            Duration: {leg.duration.text}
-          </Text>
-          <Text style={styles.locationText}>
+          </View>
+          <View style={{margin:2}}>
+            <Text style={styles.Text1}>
+              Destination:
+            </Text>
+            <Text style={styles.box}>
+              {leg.end_address}
+            </Text>
+          </View>
+          <View style={{flexDirection:'row',margin:2}}>
+            <Text style={styles.Text1}>
+              Distance: 
+            </Text>
+            <Text style={{textAlignVertical:'center',margin:2}}>
+              {leg.distance.text}
+            </Text>
+          </View>
+          <View style={{flexDirection:'row',margin:2}}>
+            <Text style={styles.Text1}>
+              Duration: 
+            </Text>
+            <Text style={{textAlignVertical:'center', margin:2}}>
+            {leg.duration.text}
+            </Text>
+          </View>
+          <Text style={styles.Text1}>
             Steps:
           </Text>
           {leg.steps.map((step, stepIndex) => (
-            <Text key={stepIndex} style={styles.locationText}>
+            <View style={styles.box}>
+            <Text key={stepIndex}>
               {step.html_instructions.replace(/<[^>]*>/g, "")}
             </Text>
+            </View>
           ))}
         </View>
       ))}
@@ -749,9 +800,20 @@ const styles = StyleSheet.create({
     left: "25%",
     right: "25%",
   },
+  box:{
+    borderWidth:1,
+    padding:5,
+    margin:2,
+    borderRadius:10,
+    backgroundColor:'#fff',
+    borderColor:'#34A751'
+  },
+  heading:{
+    // margin:5
+  },
   currentLocationButton: {
     position: "absolute",
-    bottom: 80,
+    bottom: 40,
     right: 20,
     backgroundColor: "#34A751",
     padding: 15,
@@ -761,7 +823,7 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     position: "absolute",
-    bottom: 150,
+    bottom: 110,
     right: 20,
     backgroundColor: "#34A751",
     padding: 15,
@@ -771,7 +833,7 @@ const styles = StyleSheet.create({
   },
   directionsButton: {
     position: "absolute",
-    bottom: 220,
+    bottom: 180,
     right: 20,
     backgroundColor: "#34A751",
     padding: 15,
@@ -792,17 +854,21 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     paddingBottom: 20,
+    paddingHorizontal:10,
     flexGrow:1
   },
   locationItem: {
     marginBottom: 10,
     padding: 10,
-    backgroundColor: "#fff",
     borderRadius: 10,
-    width: "100%",
+    backgroundColor:'#fff'
   },
   locationText: {
     fontSize: 16,
+  },
+  Text1: {
+    fontSize: 16,
+    fontWeight:'600'
   },
   buttonGroup: {
     flexDirection: "row",
@@ -857,6 +923,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignSelf:'center',
     marginBottom:10
+  },
+  bottominBut2: {
+    width:'30%',
+    backgroundColor: '#34A751',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignSelf:'center',
+    marginBottom:10,
+    marginHorizontal:20
   },
   confirminBut: {
     width: '100%',
