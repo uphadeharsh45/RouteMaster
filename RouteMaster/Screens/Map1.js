@@ -38,6 +38,7 @@ import MapViewDirections from "react-native-maps-directions";
 import greenmarker4 from "../assets/greenmarker4.png";
 import Toast from "react-native-toast-message";
 import CustomMarker from "../components/CustomMarker";
+import { SMS } from "../components/SMS";
 
 
 const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
@@ -318,6 +319,61 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
     }
   };
 
+  const calculateETA = (startTime, durationInSeconds) => {
+    const startTimeInMillis = startTime.getTime();
+    const estimatedTimeInMillis = startTimeInMillis + durationInSeconds * 1000;
+    const estimatedTime = new Date(estimatedTimeInMillis);
+    return estimatedTime;
+  };
+
+
+
+  const handleSMS = async () => {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${optimizedRoute[0].latitude},${optimizedRoute[0].longitude}&destination=${optimizedRoute[optimizedRoute.length - 1].latitude},${optimizedRoute[optimizedRoute.length - 1].longitude}&waypoints=${optimizedRoute
+          .slice(1, -1)
+          .map((coordinate) => `via:${coordinate.latitude},${coordinate.longitude}`)
+          .join("|")}&key=${API_KEY}`
+      );
+      const data = await response.json();
+  
+      // Create a map to link optimized route locations with the original locations' phone numbers, excluding the starting location
+      const locationMap = new Map();
+      locations.forEach((location) => {
+        const key = `${location.latitude.toFixed(6)},${location.longitude.toFixed(6)}`;
+        locationMap.set(key, location.phoneNumber);
+      });
+  
+      console.log(locationMap);
+  
+      const now = new Date();
+      const legs = data.routes[0].legs;
+      
+      for (let i = 0; i < legs.length; i++) {
+        const leg = legs[i];
+        const durationInSeconds = leg.duration.value;
+        const estimatedTime = calculateETA(now, durationInSeconds);
+  
+        const latLng = `${optimizedRoute[i+1].latitude.toFixed(6)},${optimizedRoute[i+1].longitude.toFixed(6)}`;
+        const phoneNumber = '+91'+locationMap.get(latLng);
+  
+        const msg = `Your delivery time is ${estimatedTime}`;
+        console.log(msg);
+        console.log(phoneNumber);
+  
+        if (phoneNumber) {
+          await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for 3 seconds
+          await SMS(phoneNumber, msg);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching textual directions:", error);
+    }
+  };
+  
+  
+
   const renderItem = ({ item }) => (
     <View style={styles.row}>
       <Text style={styles.cell}>{item.name}</Text>
@@ -568,6 +624,7 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
   }}
 >
   <BottomSheetView style={styles.contentContainer}>
+    <Button onPress={handleSMS} title="send sms"></Button>
     <Text style={styles.sheetTitle}>TEXTUAL DIRECTIONS</Text>
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
       {textualDirections.map((leg, index) => (
