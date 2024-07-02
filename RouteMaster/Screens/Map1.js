@@ -16,7 +16,7 @@ import {
   Alert,
   TouchableOpacity,
   Modal,
-  ScrollView,
+  
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
@@ -39,6 +39,7 @@ import greenmarker4 from "../assets/greenmarker4.png";
 import Toast from "react-native-toast-message";
 import CustomMarker from "../components/CustomMarker";
 import { SMS } from "../components/SMS";
+import { ScrollView } from "react-native-gesture-handler";
 
 
 const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
