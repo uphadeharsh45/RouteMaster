@@ -67,13 +67,74 @@ const Map1 = () => {
   const [optimizeWayPoints,setOptimizeWaypoints]=useState(false);
   const [markersWithOrder, setMarkersWithOrder] = useState([]);
   const [textualDirections, setTextualDirections] = useState([]);
-const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
+const [directionsModalVisible, setDirectionsModalVisible] = useState(false);
+const [location, setLocation] = useState(null);
+const [errorMsg, setErrorMsg] = useState(null);
+const [routeCoordinates, setRouteCoordinates] = useState([]);
+const [tracking, setTracking] = useState(false);
+const locationSubscriptionRef = useRef(null);
+const [markers, setMarkers] = useState([]);
+
 
 
   const mapRef = useRef(null);
   const bottomSheetModalRef = useRef(null);
   const directionsModalRef=useRef(null);
   const snapPoints = useMemo(() => ["25%", "50%"], []);
+
+
+
+  const startTracking = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      setErrorMsg('Permission to access location was denied');
+      return;
+    }
+
+    let location = await Location.getCurrentPositionAsync({});
+    setLocation(location.coords);
+    setRouteCoordinates([
+      { latitude: location.coords.latitude, longitude: location.coords.longitude },
+    ]);
+
+    locationSubscriptionRef.current = await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.High,
+        timeInterval: 5000, // Update every 5 seconds
+        distanceInterval: 10, // Update every 10 meters
+      },
+      (newLocation) => {
+        setLocation(newLocation.coords);
+        setRouteCoordinates((prevCoords) => [
+          ...prevCoords,
+          { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude },
+        ]);
+        mapRef.current.animateCamera({
+          center: {
+            latitude: newLocation.coords.latitude,
+            longitude: newLocation.coords.longitude,
+          },
+          // zoom: 15,
+        });
+      }
+    );
+    setTracking(true);
+  };
+
+  const stopTracking = () => {
+    if (locationSubscriptionRef.current) {
+      locationSubscriptionRef.current.remove();
+    }
+    setTracking(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (locationSubscriptionRef.current) {
+        locationSubscriptionRef.current.remove();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -86,6 +147,9 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
       let location = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = location.coords;
       setCL({ latitude: latitude, longitude: longitude });
+      setLocation({ latitude: latitude, longitude: longitude });
+      // setMarkers(prevMarkers => [...prevMarkers, {name:"current loc", lat: latitude, lng: longitude }]);
+
       setRegion({
         latitude,
         longitude,
@@ -101,6 +165,9 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
     requestLocationPermission();
   }, []);
 
+  
+
+  
   const handleConfirmLocation = () => {
     setModalVisible(true);
   };
@@ -113,6 +180,16 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
     await fetchTextualDirections();
     handlePresentDirectionsModalPress();
   }
+
+  const handleDeleteCustomer = (latToDelete, lngToDelete) => {
+    // Remove the customer from the places array
+    setLocations(prevLocations => prevLocations.filter(location => location.latitude !== latToDelete || location.longitude !== lngToDelete));
+    setMarkers(prevMarkers => prevMarkers.filter(marker => marker.latitude !== latToDelete || marker.longitude !== lngToDelete))
+
+    // Remove the corresponding marker from the markers array
+    // setMarkers([]);
+    
+  };
 
   const fetchTextualDirections = async () => {
     try {
@@ -153,6 +230,8 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
         longitude: marker.longitude,
       };
       setLocations([...locations, newLocation]);
+      setMarkers(prevMarkers => [...prevMarkers,{name:userName, latitude:marker.latitude, longitude: marker.longitude } ]);
+
       setModalVisible(false);
       setShowConfirmButton(false);
       Alert.alert(
@@ -239,6 +318,10 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
     return `${hours}:${minutes}`;
   };
 
+  const clearMarkers=()=>{
+    setMarkers([]);
+  }
+
   const handleGetDirections = async () => {
     const latLongArray = locations.map((location) => ({
       latitude: location.latitude,
@@ -310,10 +393,16 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
         ...coordinate,
         order: index + 1, // Add order property
       }));
-  
+        clearMarkers();
         setMarkersWithOrder(markersWithOrder);
         toggleDirectionsModal();
         handleCloseModalPress(); 
+        Toast.show({
+          type: "success",
+          text1: "Fetched Path Successfully",
+          text2: "Showing the best possible path",
+          visibilityTime: 5000,
+        });
 
       console.log("Optimized Route:", data);
     } catch (error) {
@@ -332,47 +421,65 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
 
   const handleSMS = async () => {
     try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${optimizedRoute[0].latitude},${optimizedRoute[0].longitude}&destination=${optimizedRoute[optimizedRoute.length - 1].latitude},${optimizedRoute[optimizedRoute.length - 1].longitude}&waypoints=${optimizedRoute
-          .slice(1, -1)
-          .map((coordinate) => `via:${coordinate.latitude},${coordinate.longitude}`)
-          .join("|")}&key=${API_KEY}`
-      );
-      const data = await response.json();
-  
-      // Create a map to link optimized route locations with the original locations' phone numbers, excluding the starting location
-      const locationMap = new Map();
-      locations.forEach((location) => {
-        const key = `${location.latitude.toFixed(6)},${location.longitude.toFixed(6)}`;
-        locationMap.set(key, location.phoneNumber);
-      });
-  
-      console.log(locationMap);
-  
-      const now = new Date();
-      const legs = data.routes[0].legs;
-      
-      for (let i = 0; i < legs.length; i++) {
-        const leg = legs[i];
-        const durationInSeconds = leg.duration.value;
-        const estimatedTime = calculateETA(now, durationInSeconds);
-  
-        const latLng = `${optimizedRoute[i+1].latitude.toFixed(6)},${optimizedRoute[i+1].longitude.toFixed(6)}`;
-        const phoneNumber = '+91'+locationMap.get(latLng);
-  
-        const msg = `Your delivery time is ${estimatedTime}`;
-        console.log(msg);
-        console.log(phoneNumber);
-  
-        if (phoneNumber) {
-          await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for 3 seconds
-          await SMS(phoneNumber, msg);
+        // Build waypoints string
+        const waypoints = optimizedRoute
+            .slice(1, -1)
+            .map((coordinate) => `${coordinate.latitude},${coordinate.longitude}`)
+            .join("|");
+
+        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${optimizedRoute[0].latitude},${optimizedRoute[0].longitude}&destination=${optimizedRoute[optimizedRoute.length - 1].latitude},${optimizedRoute[optimizedRoute.length - 1].longitude}&waypoints=${waypoints}&key=${API_KEY}`;
+
+        console.log("Directions API URL:", url); // Log the URL to verify its correctness
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        // Log the response to inspect the legs
+        console.log("API Response:", data);
+
+        // Create a map to link optimized route locations with the original locations' phone numbers, excluding the starting location
+        const locationMap = new Map();
+        locations.forEach((location) => {
+            const key = `${location.latitude.toFixed(6)},${location.longitude.toFixed(6)}`;
+            locationMap.set(key, location.phoneNumber);
+        });
+
+        console.log("Location Map:", locationMap);
+
+        const now = new Date();
+        let accumulatedTime = now.getTime(); // Start with current time in milliseconds
+
+        const legs = data.routes[0].legs;
+        console.log("legs length : ", legs.length);
+
+        if (legs.length === 0) {
+            throw new Error("No legs found in the directions response");
         }
-      }
+
+        for (let i = 0; i < legs.length; i++) {
+            const leg = legs[i];
+            const durationInSeconds = leg.duration.value;
+            const estimatedTime = calculateETA(new Date(accumulatedTime), durationInSeconds); // Calculate estimated time
+
+            const latLng = `${optimizedRoute[i + 1].latitude.toFixed(6)},${optimizedRoute[i + 1].longitude.toFixed(6)}`;
+            const phoneNumber = '+91' + locationMap.get(latLng);
+
+            const msg = `Your delivery time is ${estimatedTime}`;
+            console.log("Sending SMS:", msg, "to", phoneNumber);
+
+            if (phoneNumber) {
+                await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for 3 seconds between SMS sends
+                await SMS(phoneNumber, msg);
+            }
+
+            accumulatedTime += durationInSeconds * 1000; // Add current leg's duration to accumulated time in milliseconds
+        }
     } catch (error) {
-      console.error("Error fetching textual directions:", error);
+        console.error("Error fetching textual directions:", error);
     }
-  };
+};
+
+  
   
   
 
@@ -483,27 +590,29 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
                   />
                 )))}
 
-              { locations.map((location, index) => (
+              { markers.map((location, index) => (
                 <Marker
                   image={greenmarker4}
-                  key={index}
+                  key={`marker-${index}-${location.latitude}-${location.longitude}`}
                   coordinate={{
                     latitude: location.latitude,
                     longitude: location.longitude,
                   }}
-                  title={location.userName}
-                  description={`Mobile: ${location.userMobile}\nDelivery Time: ${location.startTime} - ${location.endTime}`}
+                  title={location.name}
+                  
                 />
               ))}
               {optimizedRoute && (
                 <MapViewDirections
-                  origin={optimizedRoute[0]}
+                  // origin={optimizedRoute[0]}
+                  origin={location}
                   destination={optimizedRoute[optimizedRoute.length - 1]}
                   waypoints={optimizedRoute.slice(1, -1)}
                   apikey={API_KEY}
                   strokeWidth={3}
                   strokeColor="black"
                   optimizeWaypoints={optimizeWayPoints}
+                  // resetOnChange={false}
                   onStart={(params) => {
                     console.log(
                       `Started routing between "${params.origin}" and "${params.destination}"`
@@ -512,14 +621,14 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
                   onReady={(result) => {
                     console.log(`Distance: ${result.distance} km`);
                     console.log(`Duration: ${result.duration} min.`);
-                    mapRef.current.fitToCoordinates(result.coordinates,{
-                      edgePadding:{
-                        right:30,
-                        bottom:300,
-                        left:30,
-                        top:100
-                      }
-                    })
+                    // mapRef.current.fitToCoordinates(result.coordinates,{
+                    //   edgePadding:{
+                    //     right:30,
+                    //     bottom:300,
+                    //     left:30,
+                    //     top:100
+                    //   }
+                    // })
                   }}
                   onError={(errorMessage) => {
                     console.error(errorMessage);
@@ -581,13 +690,13 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
             <Text style={styles.sheetTitle}>SAVED LOCATIONS</Text>
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
               {locations.map((location, index) => (
-                <View style={{flexDirection:'row'}}>
+                <View style={{flexDirection:'row'}} key={index}>
                   <View style={{marginTop:5,marginRight:-5}}>
                   <TouchableOpacity>
-                  <MaterialIcons name="delete" size={24} color="black" style={{marginEnd:10}} />
+                  <MaterialIcons name="delete" size={24} color="black" style={{marginEnd:10}} onPress={()=>handleDeleteCustomer(location.latitude,location.longitude)} />
                   </TouchableOpacity>
                   </View>
-                <View key={index} style={styles.locationItem}>
+                <View  style={styles.locationItem}>
                   <Text style={styles.locationText}>NAME: {location.name}</Text>
                   <Text style={styles.locationText}>
                     PHONE: {location.phoneNumber}
@@ -637,9 +746,11 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
     <View style={{flexDirection:'row'}}>
       <TouchableOpacity
         style={styles.bottominBut2}
+        
+          onPress={tracking ? stopTracking : startTracking}
       >
         <View>
-          <Text style={styles.textSign}>START</Text>
+          <Text style={styles.textSign}>{tracking ? "Stop Tracking" : "Get Started"}</Text>
         </View>
       </TouchableOpacity>
       <TouchableOpacity
@@ -692,8 +803,8 @@ const [directionsModalVisible, setDirectionsModalVisible] = useState(false)
             Steps:
           </Text>
           {leg.steps.map((step, stepIndex) => (
-            <View style={styles.box}>
-            <Text key={stepIndex}>
+            <View style={styles.box} key={stepIndex}>
+            <Text >
               {step.html_instructions.replace(/<[^>]*>/g, "")}
             </Text>
             </View>
