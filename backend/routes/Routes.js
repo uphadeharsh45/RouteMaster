@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 var fetchuser = require('../middleware/fetchuser');
@@ -5,15 +6,12 @@ const Routes = require('../models/Route');
 const TWRoutes=require('../models/TWRoute');
 const { body, validationResult } = require('express-validator');
 const twilio=require('twilio');
-const accountSid = 'AC4b95f855eba1ce9560cda049dcc020ff';
-const authToken = '51af968ff024dfe504113efb5b0374af';
-const twilioPhoneNumber = '+12513175211';
-// const accountSid = process.env.TWILIO_ACC_SID;
-// const authToken = process.env.TWILIO_ATUH_TOKEN;
-// const twilioPhoneNumber =process.env.TWILIO_PH;
+
+const accountSid = process.env.TWILIO_ACC_SID;
+const authToken = process.env.TWILIO_ATUH_TOKEN;
+const twilioPhoneNumber =process.env.TWILIO_PH;
 
 const client = twilio(accountSid, authToken);
-// const client = twilio(process.env.TWILIO_ACC_SID, process.env.TWILIO_ATUH_TOKEN);
 
 
 // Route 1 : Get all the routes using GET "/api/notes/fetchallnotes".Login required.
