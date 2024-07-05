@@ -298,6 +298,12 @@ const [markers, setMarkers] = useState([]);
 
       // Attempt to parse the response text as JSON
       const data = JSON.parse(text);
+      Toast.show({
+        type: "success",
+        text1: "Route saved successfully",
+        // text2: "Showing shortest possible path",
+        visibilityTime: 5000,
+      });
       console.log("Route added successfully:", data);
     } catch (error) {
       console.error("Error adding route:", error);
