@@ -12,6 +12,7 @@ import Profile from './Screens/Profile';
 import Map1 from './Screens/Map1';
 import Map2 from './Screens/Map2';
 import { Ionicons, FontAwesome5, FontAwesome } from '@expo/vector-icons';
+import ShowOnMapTW from './Screens/ShowOnMapTW';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -34,7 +35,7 @@ export const TabNav = ({signOut}) => {
           )
         }}/>
         
-      <Tab.Screen name="SavedRoutes" component={SavedRoutes} 
+      <Tab.Screen name="SavedRoutes" component={SRStackNav} 
         options={{
           tabBarIcon:({focused})=>(
             <FontAwesome5 name="route" size={24} color={focused ? '#34A751' :'black'} />
@@ -69,6 +70,24 @@ export const StackNav = () => {
        <Stack.Screen name='Login' component={LoginNav} options={{ headerShown: false }} />
        <Stack.Screen name='Map1' component={Map1} options={{headerShown:false}} />
        <Stack.Screen name='Map2' component={Map2} options={{headerShown:false}}/>
+    </Stack.Navigator>
+  );
+}
+export const SRStackNav = () => {
+  return (
+    <Stack.Navigator initialRouteName='SavedRoutes' 
+    // screenOptions={{
+    //   headerStyle: {
+    //     backgroundColor: '#34A751'
+    //   },
+    //   headerTintColor: 'white',
+    //   headerTitleAlign: "center",
+    // }}
+    >
+      <Stack.Screen name='SavedRoutes' component={SavedRoutes} options={{headerShown:false}}/>
+          
+       <Stack.Screen name='ShowOnMapTW' component={ShowOnMapTW} options={{ headerShown: false }} />
+      
     </Stack.Navigator>
   );
 }
