@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react'
-import { StyleSheet, Text, View,Button } from 'react-native'
+import { StyleSheet, Text, View, Button, Image, ScrollView } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native';
 import { BackHandler } from 'react-native';
 import { Alert } from 'react-native';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
+import AppIntroSlider from 'react-native-app-intro-slider';
 
 
 const Home = () => {
@@ -38,17 +39,55 @@ const Home = () => {
         },[]),
       );
     
-    
+    const slides=[
+    {
+      key: '1',
+      title: 'Hello All 1',
+      text: 'Say something cool',
+      image: require('../assets/signUp.png'),
+      backgroundColor: 'red'
+    },
+    {
+      key: '2',
+      title: 'Be Cool',
+      text: 'Other Cool Stuff',
+      image: require('../assets/bg_login.jpg'),
+      backgroundColor: 'blue'
+    },
+    {
+      key: '3',
+      title: 'Let us Start',
+      text: 'We are already cool',
+      image: require('../assets/signUp.png'),
+      backgroundColor: 'green'
+    }
+  ]
+  const renderSlide=({item})=>{
+    console.log('Rendering slide:', item);
+    return(
+    <View>
+      <Text style={{fontSize:30,textAlign:'center'}}>{item.title}</Text>
+      <Image source={item.image} style={{height:300,width:400}} />
+    </View>
+    );
+  }
     // console.log(props)
   return (
+    <ScrollView>
     <View style={styles.viewStyle}>
+      <AppIntroSlider 
+      data={slides}
+      renderItem={renderSlide}
+      style={{height:300,width:'auto',borderWidth:1}}
+      />
         <Text style={styles.headingStyle}>React Native Navigation</Text>
         <Text style={styles.textStyle}>This is Home Screen</Text>    
         <Button title='Map1 page' 
-        onPress={() => navigation.navigate('Map1')}/>   
+        onPress={() => navigation.navigate('Map1')}/>
         <Button title='Map2 page' 
-        onPress={() => navigation.navigate('Map2')}/>   
+        onPress={() => navigation.navigate('Map2')}/>
     </View>
+    </ScrollView>
   )
 }
 
