@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, StatusBar, Modal, Button } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, StatusBar, Modal, Button, Switch } from 'react-native';
 import { DataTable } from 'react-native-paper';
 import routeContext from '../context/routes/routeContext';
 import { FontAwesome5, MaterialIcons, Feather } from '@expo/vector-icons';
@@ -19,6 +19,7 @@ const SavedRoutes = () => {
   const [newEndTime, setNewEndTime] = useState(new Date());
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+  const [deadline, setdeadline] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,15 +74,26 @@ const SavedRoutes = () => {
     navigation.navigate('ShowOnMapTW', { routeId, locations });
   };
 
+  const routesToDisplay = deadline ? routes : twroutes;
+
   return (
     <View style={styles.main}>
       <StatusBar backgroundColor='#34A751' barStyle='light-content' />
       <View style={styles.header}>
         <Text style={styles.nameText}>Saved Routes</Text>
       </View>
+      <View style={{flexDirection:'row',justifyContent:'space-between'}}>
+        <Text style={{fontSize: 18,fontWeight: '600',margin: 12 }}>{deadline? "Deadline Routes" : "Time Window Routes"}</Text>
+        <Switch
+        trackColor={{true:'#15e64a'}}
+        thumbColor={deadline ? '#34A751' : '#fff'}
+        onValueChange={()=>{setdeadline(!deadline)}}
+        value={deadline} 
+        />
+      </View>
       <ScrollView style={styles.container}>
-        {twroutes && twroutes.length > 0 ? (
-          twroutes.map((route, index) => (
+        {routesToDisplay && routesToDisplay.length > 0 ? (
+          routesToDisplay.map((route, index) => (
             <View key={route._id}>
               <View style={styles.tableHeaderText}>
                 <Text style={{ fontSize: 18, fontWeight: '600', marginEnd: 10 }}>ROUTE {index + 1}</Text>
@@ -97,16 +109,29 @@ const SavedRoutes = () => {
                 </TouchableOpacity>
               </View>
               <DataTable style={styles.container2}>
-                <DataTable.Header style={styles.tableHeader}>
+                  {deadline ? (
+                  <DataTable.Header style={styles.tableHeader}>
                   <DataTable.Title style={{ margin: -25 }}>  </DataTable.Title>
-                  <DataTable.Title style={{ margin: -25 }}>  </DataTable.Title>
+                  <DataTable.Title style={{ margin: -40 }}>  </DataTable.Title>
                   <DataTable.Title textStyle={{ color: 'white' }}>Name</DataTable.Title>
-                  <DataTable.Title textStyle={{ color: 'white' }}>Start Time</DataTable.Title>
-                  <DataTable.Title textStyle={{ color: 'white' }}>End Time</DataTable.Title>
-                </DataTable.Header>
+                  <DataTable.Title textStyle={{ color: 'white' }}>Deadline</DataTable.Title>
+                  </DataTable.Header>
+                  ) : (
+                    <>
+                    <DataTable.Header style={styles.tableHeader}>
+                    <DataTable.Title style={{ margin: -25 }}>  </DataTable.Title>
+                    <DataTable.Title style={{ margin: -25 }}>  </DataTable.Title>
+                    <DataTable.Title textStyle={{ color: 'white' }}>Name</DataTable.Title>
+                    <DataTable.Title textStyle={{ color: 'white' }}>Start Time</DataTable.Title>
+                    <DataTable.Title textStyle={{ color: 'white' }}>End Time</DataTable.Title>
+                    </DataTable.Header>
+                    </>
+                  )}
+                  {/* <DataTable.Title textStyle={{ color: 'white' }}>Start Time</DataTable.Title>
+                  <DataTable.Title textStyle={{ color: 'white' }}>End Time</DataTable.Title> */}
                 {route.locations.map((location) => (
                   <DataTable.Row key={location._id}>
-                    <DataTable.Cell style={{ marginEnd: -40, marginLeft: -10 }}>
+                    <DataTable.Cell style={deadline ? styles.iconsclose : styles.iconsfar }>
                       <TouchableOpacity onPress={() => { deleteTWCustomer(route._id, location._id); Toast.show({
                         type: "success",
                         text1: "Deleted Customer Successfully",
@@ -121,8 +146,16 @@ const SavedRoutes = () => {
                       </TouchableOpacity>
                     </DataTable.Cell>
                     <DataTable.Cell>{location.name}</DataTable.Cell>
-                    <DataTable.Cell>{location.startTime}</DataTable.Cell>
-                    <DataTable.Cell>{location.endTime}</DataTable.Cell>
+                    {deadline ? (
+                      <DataTable.Cell>{location.time}</DataTable.Cell>
+                    ) : (
+                      <>
+                        <DataTable.Cell>{location.startTime}</DataTable.Cell>
+                        <DataTable.Cell>{location.endTime}</DataTable.Cell>
+                      </>
+                    )}
+                    {/* <DataTable.Cell>{location.startTime}</DataTable.Cell>
+                    <DataTable.Cell>{location.endTime}</DataTable.Cell> */}
                   </DataTable.Row>
                 ))}
               </DataTable>
@@ -197,6 +230,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     marginBottom: 20,
+    // marginHorizontal:25
   },
   container2: {
     backgroundColor: '#fff',
@@ -251,6 +285,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginVertical: 10,
   },
+  iconsclose:{
+    marginEnd: -67, 
+    marginLeft: -10
+  },
+  iconsfar:{
+    marginEnd: -40, 
+    marginLeft: -10
+  }
 });
 
 export default SavedRoutes;
