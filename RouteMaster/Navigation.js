@@ -14,6 +14,8 @@ import Map2 from './Screens/Map2';
 import { Ionicons, FontAwesome5, FontAwesome } from '@expo/vector-icons';
 import ShowOnMapTW from './Screens/ShowOnMapTW';
 import ShowOnMapDeadLine from './Screens/ShowOnMapDeadLine';
+import ForgotPassword from './Screens/Login&Register/ForgotPassword';
+import ResetPassword from './Screens/Login&Register/ResetPassword';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -103,6 +105,9 @@ export const LoginNav = ({ setIsLoggedIn }) => {
         {props => <Login {...props} setIsLoggedIn={setIsLoggedIn} />}
       </Stack.Screen>
       <Stack.Screen name='Register' component={Register}></Stack.Screen>
+      <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+      <Stack.Screen name="ResetPassword" component={ResetPassword} />
+
       <Stack.Screen name='Home' component={TabNav}></Stack.Screen>
     </Stack.Navigator>
   );
