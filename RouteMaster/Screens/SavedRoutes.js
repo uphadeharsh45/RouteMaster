@@ -10,7 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 const SavedRoutes = () => {
   const navigation = useNavigation();
   const context = useContext(routeContext);
-  const { twroutes, getalltwroutes, deleteTWRoute, deleteTWCustomer, updateTWTime,routes,getallroutes } = context;
+  const { twroutes, getalltwroutes, deleteTWRoute, deleteTWCustomer, updateTWTime, routes, getallroutes, deleteRoute, deleteCustomer, updateTime } = context;
 
   const [modalVisible, setModalVisible] = useState(false);
   const [currentRouteId, setCurrentRouteId] = useState(null);
@@ -19,7 +19,7 @@ const SavedRoutes = () => {
   const [newEndTime, setNewEndTime] = useState(new Date());
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
-  const [deadline, setdeadline] = useState(false);
+  const [deadline, setDeadline] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,6 +44,13 @@ const SavedRoutes = () => {
     setModalVisible(true);
   };
 
+  const handleDeadlineEditPress = (routeId, locationId, deadlineTime) => {
+    setCurrentRouteId(routeId);
+    setCurrentLocationId(locationId);
+    setNewEndTime(new Date(`1970-01-01T${deadlineTime}:00`));
+    setModalVisible(true);
+  };
+
   const handleTimeChange = (event, selectedDate, isStartTime) => {
     if (selectedDate) {
       if (isStartTime) {
@@ -61,7 +68,11 @@ const SavedRoutes = () => {
   };
 
   const handleConfirm = () => {
-    updateTWTime(currentRouteId, currentLocationId, formatTime(newStartTime), formatTime(newEndTime));
+    if (deadline) {
+      updateTime(currentRouteId, currentLocationId, formatTime(newEndTime));
+    } else {
+      updateTWTime(currentRouteId, currentLocationId, formatTime(newStartTime), formatTime(newEndTime));
+    }
     setModalVisible(false);
     Toast.show({
       type: "success",
@@ -73,6 +84,9 @@ const SavedRoutes = () => {
   const handleShowOnMap = (routeId, locations) => {
     navigation.navigate('ShowOnMapTW', { routeId, locations });
   };
+  const handleShowOnMapDL = (routeId, locations) => {
+    navigation.navigate('ShowOnMapDeadLine', { routeId, locations });
+  };
 
   const routesToDisplay = deadline ? routes : twroutes;
 
@@ -82,13 +96,13 @@ const SavedRoutes = () => {
       <View style={styles.header}>
         <Text style={styles.nameText}>Saved Routes</Text>
       </View>
-      <View style={{flexDirection:'row',justifyContent:'space-between'}}>
-        <Text style={{fontSize: 18,fontWeight: '600',margin: 12 }}>{deadline? "Deadline Routes" : "Time Window Routes"}</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 18, fontWeight: '600', margin: 12 }}>{deadline ? "Deadline Routes" : "Time Window Routes"}</Text>
         <Switch
-        trackColor={{true:'#15e64a'}}
-        thumbColor={deadline ? '#34A751' : '#fff'}
-        onValueChange={()=>{setdeadline(!deadline)}}
-        value={deadline} 
+          trackColor={{ true: '#15e64a' }}
+          thumbColor={deadline ? '#34A751' : '#fff'}
+          onValueChange={() => { setDeadline(!deadline) }}
+          value={deadline}
         />
       </View>
       <ScrollView style={styles.container}>
@@ -97,42 +111,40 @@ const SavedRoutes = () => {
             <View key={route._id}>
               <View style={styles.tableHeaderText}>
                 <Text style={{ fontSize: 18, fontWeight: '600', marginEnd: 10 }}>ROUTE {index + 1}</Text>
-                <TouchableOpacity onPress={() => { deleteTWRoute(route._id); Toast.show({
+                <TouchableOpacity onPress={() => { { deadline ? deleteRoute(route._id) : deleteTWRoute(route._id) }; Toast.show({
                   type: "success",
                   text1: "Deleted Route Successfully",
                   visibilityTime: 5000,
                 }); }}>
                   <MaterialIcons name="delete" size={24} color="black" style={{ marginEnd: 10 }} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleShowOnMap(route._id, route.locations)}>
+                <TouchableOpacity onPress={() => {{deadline?handleShowOnMapDL(route._id,route.locations):handleShowOnMap(route._id, route.locations)}}}>
                   <FontAwesome5 name="map-marked-alt" size={20} color="black" />
                 </TouchableOpacity>
               </View>
               <DataTable style={styles.container2}>
-                  {deadline ? (
+                {deadline ? (
                   <DataTable.Header style={styles.tableHeader}>
-                  <DataTable.Title style={{ margin: -25 }}>  </DataTable.Title>
-                  <DataTable.Title style={{ margin: -40 }}>  </DataTable.Title>
-                  <DataTable.Title textStyle={{ color: 'white' }}>Name</DataTable.Title>
-                  <DataTable.Title textStyle={{ color: 'white' }}>Deadline</DataTable.Title>
-                  </DataTable.Header>
-                  ) : (
-                    <>
-                    <DataTable.Header style={styles.tableHeader}>
                     <DataTable.Title style={{ margin: -25 }}>  </DataTable.Title>
-                    <DataTable.Title style={{ margin: -25 }}>  </DataTable.Title>
+                    <DataTable.Title style={{ margin: -40 }}>  </DataTable.Title>
                     <DataTable.Title textStyle={{ color: 'white' }}>Name</DataTable.Title>
-                    <DataTable.Title textStyle={{ color: 'white' }}>Start Time</DataTable.Title>
-                    <DataTable.Title textStyle={{ color: 'white' }}>End Time</DataTable.Title>
+                    <DataTable.Title textStyle={{ color: 'white' }}>Deadline</DataTable.Title>
+                  </DataTable.Header>
+                ) : (
+                  <>
+                    <DataTable.Header style={styles.tableHeader}>
+                      <DataTable.Title style={{ margin: -25 }}>  </DataTable.Title>
+                      <DataTable.Title style={{ margin: -25 }}>  </DataTable.Title>
+                      <DataTable.Title textStyle={{ color: 'white' }}>Name</DataTable.Title>
+                      <DataTable.Title textStyle={{ color: 'white' }}>Start Time</DataTable.Title>
+                      <DataTable.Title textStyle={{ color: 'white' }}>End Time</DataTable.Title>
                     </DataTable.Header>
-                    </>
-                  )}
-                  {/* <DataTable.Title textStyle={{ color: 'white' }}>Start Time</DataTable.Title>
-                  <DataTable.Title textStyle={{ color: 'white' }}>End Time</DataTable.Title> */}
+                  </>
+                )}
                 {route.locations.map((location) => (
                   <DataTable.Row key={location._id}>
-                    <DataTable.Cell style={deadline ? styles.iconsclose : styles.iconsfar }>
-                      <TouchableOpacity onPress={() => { deleteTWCustomer(route._id, location._id); Toast.show({
+                    <DataTable.Cell style={deadline ? styles.iconsclose : styles.iconsfar}>
+                      <TouchableOpacity onPress={() => { { deadline ? deleteCustomer(route._id, location._id) : deleteTWCustomer(route._id, location._id) }; Toast.show({
                         type: "success",
                         text1: "Deleted Customer Successfully",
                         visibilityTime: 5000,
@@ -141,7 +153,7 @@ const SavedRoutes = () => {
                       </TouchableOpacity>
                     </DataTable.Cell>
                     <DataTable.Cell style={{ marginEnd: -40, marginLeft: -10 }}>
-                      <TouchableOpacity onPress={() => handleEditPress(route._id, location._id, location.startTime, location.endTime)}>
+                      <TouchableOpacity onPress={() => deadline ? handleDeadlineEditPress(route._id, location._id, location.time) : handleEditPress(route._id, location._id, location.startTime, location.endTime)}>
                         <Feather name="edit" size={17} color="black" />
                       </TouchableOpacity>
                     </DataTable.Cell>
@@ -154,8 +166,6 @@ const SavedRoutes = () => {
                         <DataTable.Cell>{location.endTime}</DataTable.Cell>
                       </>
                     )}
-                    {/* <DataTable.Cell>{location.startTime}</DataTable.Cell>
-                    <DataTable.Cell>{location.endTime}</DataTable.Cell> */}
                   </DataTable.Row>
                 ))}
               </DataTable>
@@ -175,11 +185,13 @@ const SavedRoutes = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit Times</Text>
-            <TouchableOpacity onPress={() => setShowStartPicker(true)}>
-              <Text style={styles.modalText}>Start Time: {formatTime(newStartTime)}</Text>
-            </TouchableOpacity>
+            {!deadline && (
+              <TouchableOpacity onPress={() => setShowStartPicker(true)}>
+                <Text style={styles.modalText}>Start Time: {formatTime(newStartTime)}</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity onPress={() => setShowEndPicker(true)}>
-              <Text style={styles.modalText}>End Time: {formatTime(newEndTime)}</Text>
+              <Text style={styles.modalText}>{deadline ? 'Deadline Time' : 'End Time'}: {formatTime(newEndTime)}</Text>
             </TouchableOpacity>
             <Button title="Confirm" onPress={handleConfirm} />
             <Button title="Cancel" onPress={() => setModalVisible(false)} />
@@ -230,7 +242,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     marginBottom: 20,
-    // marginHorizontal:25
   },
   container2: {
     backgroundColor: '#fff',
@@ -285,12 +296,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginVertical: 10,
   },
-  iconsclose:{
-    marginEnd: -67, 
+  iconsclose: {
+    marginEnd: -67,
     marginLeft: -10
   },
-  iconsfar:{
-    marginEnd: -40, 
+  iconsfar: {
+    marginEnd: -40,
     marginLeft: -10
   }
 });

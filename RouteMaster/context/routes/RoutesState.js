@@ -188,12 +188,153 @@ const RoutesState = (props) => {
       setRoutes(json);
     };
     
-   
+
+    const deleteRoute = async (id) => {
+      const token= await AsyncStorage.getItem('token');
+
+      try {
+        const response = await fetch(`${host}/api/routes/deleteroute/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'auth-token': token
+          }
+        });
     
+        const data = await response.json();
+    
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to delete route');
+        }
+    
+        console.log('Route deleted successfully:', data.route);
+        // return data.route; 
+        // Return the deleted route data if needed
+      } catch (error) {
+        console.error('Error deleting route:', error);
+        // Handle error
+      }
+
+      const newRoutes = routes.filter((route) => {
+        return route._id !== id;
+      })
+      setRoutes(newRoutes);
+    };
+   
+
+    const deleteCustomer = async (routeId, customerId) => {
+      const token= await AsyncStorage.getItem('token');
+
+      try {
+        const response = await fetch(`${host}/api/routes/deletecustomer/${routeId}/${customerId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'auth-token': token// Assuming you're using token-based authentication
+          }
+        });
+    
+        const data = await response.json();
+    
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to delete customer');
+        }
+
+           // Update the frontend state to reflect the changes
+     setRoutes(prevRoutes => {
+      const updatedRoutes = prevRoutes.map(route => {
+        if (route._id === routeId) {
+          // Filter out the deleted customer from the locations array
+          route.locations = route.locations.filter(customer => customer._id !== customerId);
+        }
+        return route;
+      });
+      return updatedRoutes;
+    });
+    
+        console.log('Customer deleted successfully');
+        // Return any necessary data or handle success
+      } catch (error) {
+        console.error('Error deleting customer:', error);
+        // Handle error
+      }
+    };
+
+    const updateTime = async (routeId, customerId, newTime) => {
+      const token= await AsyncStorage.getItem('token');
+
+      try {
+        const response = await fetch(`${host}/api/routes/updatetime/${routeId}/${customerId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'auth-token': token // Assuming you're using token-based authentication
+          },
+          body: JSON.stringify({ newTime }) // Send the new time in the request body
+        });
+    
+        const data = await response.json();
+    
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to update customer');
+        }
+    
+        // Update the frontend state to reflect the changes
+        setRoutes(prevRoutes => {
+          const updatedRoutes = prevRoutes.map(route => {
+            if (route._id === routeId) {
+              // Update the time of the specific customer
+              route.locations = route.locations.map(customer => {
+                if (customer._id === customerId) {
+                  return { ...customer, time: newTime };
+                }
+                return customer;
+              });
+            }
+            return route;
+          });
+          return updatedRoutes;
+        });
+    
+        console.log('Customer updated successfully');
+        // Return any necessary data or handle success
+      } catch (error) {
+        console.error('Error updating customer:', error);
+        // Handle error
+      }
+    };
+    
+    const updateRoute = async (id, newLocations) => {
+      const token= await AsyncStorage.getItem('token');
+
+      try {
+        const response = await fetch(`${host}/api/routes/updateroute/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'auth-token': token // Assuming you're using token-based authentication
+          },
+          body: JSON.stringify({ newLocations })
+        });
+    
+        const data = await response.json();
+    
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to update route');
+        }
+    
+        console.log('Route updated successfully:', data.route);
+        // return data.route; 
+        // Return the updated route data if needed
+      } catch (error) {
+        console.error('Error updating route:', error);
+        // Handle error
+      }
+    };
 
 
   return (
-    <routeContext.Provider value={{ twroutes, getalltwroutes,deleteTWRoute,deleteTWCustomer,updateTWTime,updateTWRoute,routes,getallroutes }}>
+    <routeContext.Provider value={{ twroutes, getalltwroutes,deleteTWRoute,deleteTWCustomer,updateTWTime,updateTWRoute,routes,getallroutes,deleteRoute,deleteCustomer,updateTime,updateRoute }}>
       {props.children}
     </routeContext.Provider>
   )
