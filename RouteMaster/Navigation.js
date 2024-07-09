@@ -13,6 +13,7 @@ import Map1 from './Screens/Map1';
 import Map2 from './Screens/Map2';
 import { Ionicons, FontAwesome5, FontAwesome } from '@expo/vector-icons';
 import ShowOnMapTW from './Screens/ShowOnMapTW';
+import ShowOnMapDeadLine from './Screens/ShowOnMapDeadLine';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -87,6 +88,7 @@ export const SRStackNav = () => {
       <Stack.Screen name='SavedRoutes' component={SavedRoutes} options={{headerShown:false}}/>
           
        <Stack.Screen name='ShowOnMapTW' component={ShowOnMapTW} options={{ headerShown: false }} />
+       <Stack.Screen name='ShowOnMapDeadLine' component={ShowOnMapDeadLine} options={{ headerShown: false }} />
       
     </Stack.Navigator>
   );
