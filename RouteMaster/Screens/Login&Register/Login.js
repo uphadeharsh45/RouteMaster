@@ -140,6 +140,11 @@ const Login = ({ setIsLoggedIn }) => {
                 <Text style={styles.textSign}>Log in</Text>
               </View>
             </TouchableOpacity>
+            <TouchableOpacity
+    onPress={() => navigation.navigate('ForgotPassword')}
+  >
+    <Text style={{ color: "#18b152", marginTop: 15 }}>Forgot Password?</Text>
+  </TouchableOpacity>
             <View
               style={{
                 flexDirection:'row',

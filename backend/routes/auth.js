@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const User = require('../models/User');
 const router = express.Router();
@@ -5,9 +6,18 @@ const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs')
 var jwt = require('jsonwebtoken');
 var fetchuser=require('../middleware/fetchuser')
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
+const JWT_SECRET = process.env.JWT_SECRET;
 
-const JWT_SECRET = "Harryisagoodb$oy";
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+});
 // ROUTE 1 : Create a User using: POST "/api/auth/createuser".No login required
 router.post('/createuser', [
     body('name', 'Enter a valid name').isLength({ min: 3 }),
@@ -155,6 +165,94 @@ router.post("/userdata", async (req, res) => {
       return res.send({ error: error.message });
     }
   });
+
+
+  router.post('/forgot-password', async (req, res) => {
+  
+    const { email } = req.body;
+    try {
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+  
+      const verificationCode = crypto.randomBytes(4).toString('hex');
+      const verificationCodeExpires = Date.now() + 3600000; // Code expires in 1 hour
+      user.verificationCode = verificationCode;
+      user.verificationCodeExpires = verificationCodeExpires;
+      await user.save();
+  
+      const mailOptions = {
+        from: process.env.EMAIL,
+        to: user.email,
+        subject: 'Password Reset Verification Code',
+        text: `Your verification code is ${verificationCode}. It will expire in 1 hour.`,
+      };
+  
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error('Error sending email:', error);
+          return res.status(500).json({ success: false, message: 'Failed to send email', error });
+        }
+        res.json({ success: true, message: 'Verification code sent' });
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Server error' });
+    }
+  });
+  
+  router.post('/reset-password', async (req, res) => {
+    const { email, code, newPassword } = req.body;
+    try {
+      const user = await User.findOne({ email });
+      if (!user || user.verificationCode !== code) {
+        return res.status(400).json({ success: false, message: 'Invalid code or email' });
+      }
+  
+      if (Date.now() > user.verificationCodeExpires) {
+        return res.status(400).json({ success: false, message: 'Verification code has expired' });
+      }
+  
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+      user.verificationCode = null;
+      user.verificationCodeExpires = null;
+      await user.save();
+  
+      res.json({ success: true, message: 'Password reset successful' });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Server error' });
+    }
+  });
+
+  router.post('/update-password', async (req, res) => {
+    try {
+      const { token, currentPassword, newPassword } = req.body;
+      const data = jwt.verify(token, JWT_SECRET);
+      const usertoken=data.user
+      console.log(usertoken)
+      const userId = usertoken.id;  
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+  
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ error: 'Current password is incorrect' });
+      }
+  
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+  
+      await user.save();
+  
+      res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+  
   
 
 module.exports = router
