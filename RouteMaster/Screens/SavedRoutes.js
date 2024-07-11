@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, StatusBar, Modal, Button, Switch } from 'react-native';
 import { DataTable } from 'react-native-paper';
 import routeContext from '../context/routes/routeContext';
-import { FontAwesome5, MaterialIcons, Feather } from '@expo/vector-icons';
+import { FontAwesome5, MaterialIcons, Feather, Entypo } from '@expo/vector-icons';
 import Toast from "react-native-toast-message";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
@@ -182,19 +182,35 @@ const SavedRoutes = () => {
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Times</Text>
+        <View style={styles.overlay}>
+          <View style={styles.modalView}>
+            <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setModalVisible(!modalVisible)}
+              >
+                <Entypo name="cross" size={30} color="black" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>EDIT TIME</Text>
             {!deadline && (
               <TouchableOpacity onPress={() => setShowStartPicker(true)}>
-                <Text style={styles.modalText}>Start Time: {formatTime(newStartTime)}</Text>
+                <Text style={styles.timeText}>START TIME: {formatTime(newStartTime)}</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity onPress={() => setShowEndPicker(true)}>
-              <Text style={styles.modalText}>{deadline ? 'Deadline Time' : 'End Time'}: {formatTime(newEndTime)}</Text>
+              <Text style={styles.timeText}>{deadline ? 'Deadline Time' : 'END TIME'}: {formatTime(newEndTime)}</Text>
             </TouchableOpacity>
-            <Button title="Confirm" onPress={handleConfirm} />
-            <Button title="Cancel" onPress={() => setModalVisible(false)} />
+            <View style={styles.loginbutton}>
+                <TouchableOpacity
+                  style={styles.inBut}
+                  onPress={handleConfirm}
+                >
+                  <View>
+                    <Text style={styles.textSign}>SUBMIT</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            {/* <Button title="Confirm" onPress={handleConfirm} /> */}
+            {/* <Button title="Cancel" onPress={() => setModalVisible(false)} /> */}
           </View>
         </View>
       </Modal>
@@ -274,27 +290,57 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
   },
-  modalContainer: {
+  overlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
-    alignItems: 'center',
+  modalView: {
+    width: "90%",
+    backgroundColor: "white",
+    borderRadius: 15,
+    paddingVertical: 70,
+    paddingHorizontal: 40,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    position: "relative",
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 25,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 25,
+    marginTop:-20,
+    textAlign:'center',
+    color:'#34A751'
   },
-  modalText: {
+  timeText: {
+    marginVertical: 5,
     fontSize: 16,
-    marginVertical: 10,
+    color: "grey",
+    textAlign: "center",
+  },
+  closeButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+  },
+  inBut: {
+    marginTop:10,
+    marginBottom:-10,
+    width: '60%',
+    backgroundColor: '#34A751',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignSelf:'center'
   },
   iconsclose: {
     marginEnd: -67,
@@ -303,7 +349,12 @@ const styles = StyleSheet.create({
   iconsfar: {
     marginEnd: -40,
     marginLeft: -10
-  }
+  },
+  textSign: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: 'white',
+  },
 });
 
 export default SavedRoutes;
