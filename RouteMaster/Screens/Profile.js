@@ -282,7 +282,7 @@ const Profile = ({ signOut }) => {
             <View style={styles.infoEditView}>
               <Text style={styles.infoEditFirst_text}>New Password</Text>
               <TextInput
-                placeholder="New Password"
+                placeholder='New Password'
                 placeholderTextColor={'#999797'}
                 secureTextEntry={true}
                 style={styles.infoEditSecond_text}
@@ -292,7 +292,7 @@ const Profile = ({ signOut }) => {
             </View>
 
             <View style={styles.infoEditView}>
-              <Text style={styles.infoEditFirst_text}>Confirm New Password</Text>
+              <Text style={styles.infoEditFirst_text}>Confirm Password</Text>
               <TextInput
                 placeholder="Confirm New Password"
                 placeholderTextColor={'#999797'}
@@ -303,19 +303,21 @@ const Profile = ({ signOut }) => {
               />
             </View>
           </View>
+          <View style={{flex:1,flexDirection:'row',justifyContent:'space-evenly'}}>
           <View style={styles.button}>
-            <TouchableOpacity style={styles.inBut} onPress={handleUpdateProfile}>
+            <TouchableOpacity style={styles.inBut2} onPress={handleUpdateProfile}>
               <View>
                 <Text style={styles.textSign}>Update Profile</Text>
               </View>
             </TouchableOpacity>
           </View>
           <View style={styles.button}>
-            <TouchableOpacity style={styles.inBut} onPress={handleUpdatePassword}>
+            <TouchableOpacity style={styles.inBut2} onPress={handleUpdatePassword}>
               <View>
                 <Text style={styles.textSign}>Update Password</Text>
               </View>
             </TouchableOpacity>
+          </View>
           </View>
           <View style={styles.button}>
             <TouchableOpacity style={styles.inBut} onPress={signOut}>
@@ -360,13 +362,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
   },
+  inBut2: {
+    width: '100%',
+    backgroundColor: '#18b152',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 15,
+  },
   inBut: {
     width: '50%',
     backgroundColor: '#18b152',
     alignItems: 'center',
     paddingHorizontal: 15,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: 15,
   },
   header: {
     backgroundColor: '#34A751',
@@ -413,12 +423,13 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   form: {
-    width: '90%',
+    width: '95%',
     backgroundColor: '#fff',
     borderRadius: 20,
     paddingHorizontal: 20,
     paddingVertical: 40,
-    margin: 20,
+    margin: 10,
+    marginVertical:30,
     shadowColor: 'gold',
     elevation: 2,
     shadowOpacity: 1
@@ -441,13 +452,13 @@ const styles = StyleSheet.create({
   },
   infoEditFirst_text: {
     color: '#34A751',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '400',
   },
   infoEditSecond_text: {
     color: 'black',
     fontStyle: 'normal',
-    fontSize: 15,
+    fontSize: 14,
     textAlignVertical: 'center',
     textAlign: 'right',
   },
