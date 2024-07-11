@@ -112,7 +112,7 @@ const Login = ({ setIsLoggedIn }) => {
           <View style={styles.action}>
             <FontAwesome
               name="user-o"
-              color="#18b152"
+              color="#34A751"
               style={styles.smallIcon}
             />
             <TextInput
@@ -122,7 +122,7 @@ const Login = ({ setIsLoggedIn }) => {
             />
           </View>
           <View style={styles.action}>
-            <FontAwesome name="lock" color="#18b152" style={styles.smallIcon} />
+            <FontAwesome name="lock" color="#34A751" style={styles.smallIcon} />
             <TextInput
               placeholder="Password"
               style={styles.textInput}
@@ -143,7 +143,7 @@ const Login = ({ setIsLoggedIn }) => {
             <TouchableOpacity
     onPress={() => navigation.navigate('ForgotPassword')}
   >
-    <Text style={{ color: "#18b152", marginTop: 15 }}>Forgot Password?</Text>
+    <Text style={{ color: "#34A751", marginTop: 15 }}>Forgot Password?</Text>
   </TouchableOpacity>
             <View
               style={{
