@@ -1,14 +1,13 @@
-import { NavigationContainer,useNavigation } from '@react-navigation/native';
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import { TabNav,LoginNav } from './Navigation'; // Import TabNav from Navigation.js
-import Login from './Screens/Login&Register/Login';
-import Register from './Screens/Login&Register/Register';
+import React, { useEffect, useState, useCallback } from 'react';
+import { StyleSheet } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import NetInfo from '@react-native-community/netinfo';
+import { TabNav, LoginNav } from './Navigation'; // Import TabNav and LoginNav
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useState } from 'react';
 import RoutesState from './context/routes/RoutesState';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import NoInternet from './Screens/NoInternet'; // Import the No Internet screen
 
 const toastConfig = {
   success: props => (
@@ -22,7 +21,7 @@ const toastConfig = {
         borderRightColor: 'green',
         borderRightWidth: 7,
       }}
-      contentContainerStyle={{paddingHorizontal: 15}}
+      contentContainerStyle={{ paddingHorizontal: 15 }}
       text1Style={{
         fontSize: 17,
         fontWeight: '700',
@@ -32,10 +31,6 @@ const toastConfig = {
       }}
     />
   ),
-  /*
-    Overwrite 'error' type,
-    by modifying the existing `ErrorToast` component
-  */
   error: props => (
     <ErrorToast
       {...props}
@@ -48,7 +43,7 @@ const toastConfig = {
         borderRightColor: 'red',
         borderRightWidth: 7,
       }}
-      contentContainerStyle={{paddingHorizontal: 15}}
+      contentContainerStyle={{ paddingHorizontal: 15 }}
       text1Style={{
         fontSize: 17,
         fontWeight: '700',
@@ -60,35 +55,71 @@ const toastConfig = {
   ),
 };
 
-
 export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
 
-  const [isLoggedIn,setIsLoggedIn]=useState(false);
+  const getData = async () => {
+    const data = await AsyncStorage.getItem('isLoggedIn');
+    setIsLoggedIn(data);
+  };
 
-  const getData=async()=>
-    {
-      const data=await AsyncStorage.getItem('isLoggedIn');
-      setIsLoggedIn(data);
-    }
+  const signOut = async () => {
+    await AsyncStorage.removeItem('isLoggedIn');
+    await AsyncStorage.removeItem('token');
+    setIsLoggedIn(false);
+  };
 
-    const signOut = async () => {
-      await AsyncStorage.removeItem('isLoggedIn');
-      await AsyncStorage.removeItem('token');
-      setIsLoggedIn(false);
-    }
-  
-    useEffect(()=>{
-      getData();
-    },[]);
+  useEffect(() => {
+    getData();
+
+    const handleConnectivityChange = (state) => {
+      const connected = state.isConnected && state.isInternetReachable;
+      if (isConnected !== connected) {
+        setIsConnected(connected);
+        if (connected) {
+          Toast.show({
+            type: 'success',
+            text1: 'Online',
+            text2: 'You are back online!',
+          });
+        } else {
+          Toast.show({
+            type: 'error',
+            text1: 'Offline',
+            text2: 'You have lost internet connection.',
+          });
+        }
+      }
+    };
+
+    const unsubscribe = NetInfo.addEventListener(handleConnectivityChange);
+
+    return () => {
+      unsubscribe();
+    };
+  }, [isConnected]);
+
+  if (!isConnected) {
+    return (
+      <RoutesState>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <NavigationContainer>
+            <NoInternet />
+          </NavigationContainer>
+        </GestureHandlerRootView>
+      </RoutesState>
+    );
+  }
 
   return (
     <RoutesState>
-    <GestureHandlerRootView>
-    <NavigationContainer>
-      {isLoggedIn?<TabNav signOut={signOut}/>:<LoginNav setIsLoggedIn={setIsLoggedIn}/>}
-      <Toast config={toastConfig}/>
-    </NavigationContainer>
-    </GestureHandlerRootView>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <NavigationContainer>
+          {isLoggedIn ? <TabNav signOut={signOut} /> : <LoginNav setIsLoggedIn={setIsLoggedIn} />}
+          <Toast config={toastConfig} />
+        </NavigationContainer>
+      </GestureHandlerRootView>
     </RoutesState>
   );
 }
@@ -101,32 +132,3 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
-
-
-{/* <Tab.Screen name="Home" component={StackNav}
-options={{
-  tabBarIcon:({focused})=>(
-    focused?
-    <Ionicons name="home" size={24} color='#34A751' />
-    :
-    <Ionicons name="home-outline" size={24} color='black' />
-  )
-}}/>
-
-<Tab.Screen name="SavedRoutes" component={SavedRoutes} 
-options={{
-  tabBarIcon:({focused})=>(
-    <FontAwesome5 name="route" size={24} color={focused ? '#34A751' :'black'} />
-  )
-}} />
-<Tab.Screen name="Profile" 
-options={{
-  tabBarIcon:({focused})=>(
-    focused?
-    <FontAwesome name="user" size={24} color='#34A751' />
-    :
-    <FontAwesome name="user-o" size={24} color='black' />
-  )
-}}>
-{props => <Profile {...props} signOut={signOut} />}
-</Tab.Screen> */}
