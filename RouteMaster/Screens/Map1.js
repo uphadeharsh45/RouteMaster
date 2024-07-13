@@ -67,13 +67,17 @@ const Map1 = () => {
   const [optimizeWayPoints,setOptimizeWaypoints]=useState(false);
   const [markersWithOrder, setMarkersWithOrder] = useState([]);
   const [textualDirections, setTextualDirections] = useState([]);
-const [directionsModalVisible, setDirectionsModalVisible] = useState(false);
-const [location, setLocation] = useState(null);
-const [errorMsg, setErrorMsg] = useState(null);
-const [routeCoordinates, setRouteCoordinates] = useState([]);
-const [tracking, setTracking] = useState(false);
-const locationSubscriptionRef = useRef(null);
-const [markers, setMarkers] = useState([]);
+  const [directionsModalVisible, setDirectionsModalVisible] = useState(false);
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
+  const [tracking, setTracking] = useState(false);
+  const locationSubscriptionRef = useRef(null);
+  const [markers, setMarkers] = useState([]);
+  const [routeInfo,setRouteInfo]=useState([]);
+  const [presentTime, setPresentTime] = useState(new Date());
+  const [RouteFound,setRouteFound]=useState(true);
+  const [cumulativeTime, setCumulativeTime] = useState(0);
 
 
 
@@ -191,19 +195,39 @@ const [markers, setMarkers] = useState([]);
     
   };
 
+  function extractNumberFromDurationText(duration) {
+    // Use a regular expression to extract the number part
+    // const match = durationText.match(/\d+/);
+    // return match ? Number(match[0]) : 0;
+    let totalMinutes = 0;
+  
+  const hoursMatch = duration.match(/(\d+)\s*hour/);
+  if (hoursMatch) {
+    totalMinutes += parseInt(hoursMatch[1]) * 60;
+  }
+
+  const minutesMatch = duration.match(/(\d+)\s*min/);
+  if (minutesMatch) {
+    totalMinutes += parseInt(minutesMatch[1]);
+  }
+
+  return totalMinutes;
+  }
+
   const fetchTextualDirections = async () => {
+
     try {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/directions/json?origin=${optimizedRoute[0].latitude},${optimizedRoute[0].longitude}&destination=${optimizedRoute[optimizedRoute.length - 1].latitude},${optimizedRoute[optimizedRoute.length - 1].longitude}&waypoints=${optimizedRoute
           .slice(1, -1)
           .map(
             (coordinate) =>
-              `via:${coordinate.latitude},${coordinate.longitude}`
+              `${coordinate.latitude},${coordinate.longitude}`
           )
           .join("|")}&key=${API_KEY}`
       );
       const data = await response.json();
-      console.log("Textual Directions:", data.routes[0].legs);
+      // console.log("Textual Directions:", data.routes[0].legs);
       setTextualDirections(data.routes[0].legs);
       
       
@@ -327,8 +351,15 @@ const [markers, setMarkers] = useState([]);
   const clearMarkers=()=>{
     setMarkers([]);
   }
+  const getFormattedTime = (minutes) => {
+    const date = new Date(presentTime.getTime() + minutes * 60000);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const mins = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${mins}`;
+  };
 
   const handleGetDirections = async () => {
+    setPresentTime(new Date());
     const latLongArray = locations.map((location) => ({
       latitude: location.latitude,
       longitude: location.longitude,
@@ -372,28 +403,73 @@ const [markers, setMarkers] = useState([]);
       });
 
       const data = await response.json();
-      if(!data)
-        {
-          setOptimizeWaypoints(true);
-          setOptimizedRoute(latLongArray);
-          Toast.show({
-            type: "error",
-            text1: "No possible path",
-            text2: "Showing shortest possible path",
-            visibilityTime: 5000,
-          });
-          toggleDirectionsModal();
-          handleCloseModalPress();
+      if (!data) {
+        // If data is null, show a toast and fetch shortest path using Directions API
+        
 
-          
-          return ;
+        // Use latLongArray since optimizedRoute is null
+        const waypoints = latLongArray
+            .slice(1) // Exclude the first point which is the origin
+            .map((coordinate) => `${coordinate.latitude},${coordinate.longitude}`)
+            .join("|");
+
+        // Call Directions API for shortest path
+        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${latLongArray[0].latitude},${latLongArray[0].longitude}&destination=${latLongArray[0].latitude},${latLongArray[0].longitude}&waypoints=optimize:true|${waypoints}&key=${API_KEY}`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (!data.routes || data.routes.length === 0) {
+                throw new Error("No routes found in Directions API response");
+            }
+
+            // Extract optimized route from Directions API response
+            const newOptimizedRoute = data.routes[0].waypoint_order.map(index => latLongArray[index + 1]);
+
+            // Update optimizedRoute state with the new optimized path
+            setOptimizedRoute([latLongArray[0], ...newOptimizedRoute]); // Destination set to origin
+            
+            setRouteFound(false); // Route is not found by original algorithm
+
+            // Additional logic if needed based on the fetched data
+        } catch (error) {
+            console.error("Error fetching shortest path:", error);
+            Toast.show({
+                type: "error",
+                text1: "Error fetching shortest path",
+                visibilityTime: 5000,
+            });
         }
-        const optimizedRouteCoordinates = data[0]
-      .map((index) => latLongArray[index])
-      .slice(0, -1); 
-
+        Toast.show({
+          type: "error",
+          text1: "No possible path",
+          text2: "Showing shortest possible path",
+          visibilityTime: 5000,
+      });
+    toggleDirectionsModal();
+    handleCloseModalPress();
+        return ;
+    } 
+        const routeDetails = [];
+        setRouteFound(true);
+// Map through the optimized route data
+const optimizedRouteCoordinates = data[0]
+  .map((location) => {
+    // Push an object containing index, arrival time, and departure time to the routeDetails array
+    routeDetails.push({
+      index: location.index,
+      arrival_time: location.arrival_time,
+      departure_time: location.departure_time,
+    });
+    // Return the coordinates for the current location index
+    return latLongArray[location.index];
+  })
+  .slice(0, -1);
       // Store the optimized route coordinates
       setOptimizedRoute(optimizedRouteCoordinates);
+      setRouteInfo(routeDetails);
+      console.log("this is route info:",routeInfo)
 
       const markersWithOrder = optimizedRouteCoordinates.map((coordinate, index) => ({
         ...coordinate,
@@ -410,7 +486,7 @@ const [markers, setMarkers] = useState([]);
           visibilityTime: 5000,
         });
 
-      console.log("Optimized Route:", data);
+      console.log("Optimized Route:", optimizedRoute);
     } catch (error) {
       console.error("Error fetching optimized route:", error);
     }
@@ -423,25 +499,37 @@ const [markers, setMarkers] = useState([]);
     return estimatedTime;
   };
 
+  function getFormattedTimeSMS(timestamp) {
+    const date = new Date(timestamp);
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
 
 
   const handleSMS = async () => {
     try {
-        // Build waypoints string
-        const waypoints = optimizedRoute
-            .slice(1, -1)
-            .map((coordinate) => `${coordinate.latitude},${coordinate.longitude}`)
-            .join("|");
+        let legs = [];
 
-        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${optimizedRoute[0].latitude},${optimizedRoute[0].longitude}&destination=${optimizedRoute[optimizedRoute.length - 1].latitude},${optimizedRoute[optimizedRoute.length - 1].longitude}&waypoints=${waypoints}&key=${API_KEY}`;
+        // Check if route is found and use routeInfo for legs
+       
+            // Build legs from optimizedRoute
+            const waypoints = optimizedRoute
+                .slice(1, -1)
+                .map((coordinate) => `${coordinate.latitude},${coordinate.longitude}`)
+                .join("|");
 
-        console.log("Directions API URL:", url); // Log the URL to verify its correctness
+            const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${optimizedRoute[0].latitude},${optimizedRoute[0].longitude}&destination=${optimizedRoute[optimizedRoute.length - 1].latitude},${optimizedRoute[optimizedRoute.length - 1].longitude}&waypoints=${waypoints}&key=${API_KEY}`;
 
-        const response = await fetch(url);
-        const data = await response.json();
+            const response = await fetch(url);
+            const data = await response.json();
 
-        // Log the response to inspect the legs
-        console.log("API Response:", data);
+            if (!data.routes || data.routes.length === 0) {
+                throw new Error("No routes found in Directions API response");
+            }
+
+            legs = data.routes[0].legs;
+        
 
         // Create a map to link optimized route locations with the original locations' phone numbers, excluding the starting location
         const locationMap = new Map();
@@ -452,25 +540,29 @@ const [markers, setMarkers] = useState([]);
 
         console.log("Location Map:", locationMap);
 
-        const now = new Date();
-        let accumulatedTime = now.getTime(); // Start with current time in milliseconds
-
-        const legs = data.routes[0].legs;
-        console.log("legs length : ", legs.length);
-
-        if (legs.length === 0) {
-            throw new Error("No legs found in the directions response");
-        }
+        let accumulatedTime = presentTime.getTime(); // Start with current time in milliseconds
 
         for (let i = 0; i < legs.length; i++) {
             const leg = legs[i];
             const durationInSeconds = leg.duration.value;
-            const estimatedTime = calculateETA(new Date(accumulatedTime), durationInSeconds); // Calculate estimated time
+
+            let arrivalTime, departureTime, index;
+
+            // Determine arrival and departure times based on routeFound state
+            if (RouteFound && routeInfo.length > 0) {
+                arrivalTime = presentTime.getTime() + (routeInfo[i+1].arrival_time * 60 * 1000); // Convert minutes to milliseconds
+                departureTime = presentTime.getTime() + (routeInfo[i].departure_time * 60 * 1000); // Convert minutes to milliseconds
+                index = routeInfo[i].index;
+            } else {
+                arrivalTime = accumulatedTime + durationInSeconds * 1000; // Estimated arrival time
+                departureTime = accumulatedTime + durationInSeconds * 1000 + 5 * 60 * 1000; // Estimated departure time (5 minutes after arrival)
+                index = i;
+            }
 
             const latLng = `${optimizedRoute[i + 1].latitude.toFixed(6)},${optimizedRoute[i + 1].longitude.toFixed(6)}`;
             const phoneNumber = '+91' + locationMap.get(latLng);
 
-            const msg = `Your delivery time is ${estimatedTime}`;
+            const msg = `Your delivery time is ${getFormattedTimeSMS(arrivalTime)}`;
             console.log("Sending SMS:", msg, "to", phoneNumber);
 
             if (phoneNumber) {
@@ -478,7 +570,9 @@ const [markers, setMarkers] = useState([]);
                 await SMS(phoneNumber, msg);
             }
 
-            accumulatedTime += durationInSeconds * 1000; // Add current leg's duration to accumulated time in milliseconds
+            if (!RouteFound) {
+                accumulatedTime += durationInSeconds * 1000; // Update accumulated time to include current leg's duration
+            }
         }
     } catch (error) {
         console.error("Error fetching textual directions:", error);
@@ -740,7 +834,7 @@ const [markers, setMarkers] = useState([]);
   backgroundStyle={{ backgroundColor: "#FFF6E9" }}
   ref={directionsModalRef}
 
-  snapPoints={["10%", "50%"]}
+  snapPoints={["10%", "50%","75%"]}
   dismissOnPanDown={true}
   onChange={(index) => {
     if (index === -1) {
@@ -771,53 +865,84 @@ const [markers, setMarkers] = useState([]);
     {/* <Button onPress={handleSMS} title="send sms"></Button> */}
     <Text style={styles.sheetTitle}>TEXTUAL DIRECTIONS</Text>
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
-      {textualDirections.map((leg, index) => (
-        <View key={index} style={styles.heading}>
-          <View style={{margin:2}}>
-          <Text style={styles.Text1}>
-            Source:
-          </Text>
-          <Text style={styles.box}>
-            {leg.start_address}
-          </Text>
-          </View>
-          <View style={{margin:2}}>
-            <Text style={styles.Text1}>
-              Destination:
-            </Text>
-            <Text style={styles.box}>
-              {leg.end_address}
-            </Text>
-          </View>
-          <View style={{flexDirection:'row',margin:2}}>
-            <Text style={styles.Text1}>
-              Distance: 
-            </Text>
-            <Text style={{textAlignVertical:'center',margin:2}}>
-              {leg.distance.text}
-            </Text>
-          </View>
-          <View style={{flexDirection:'row',margin:2}}>
-            <Text style={styles.Text1}>
-              Duration: 
-            </Text>
-            <Text style={{textAlignVertical:'center', margin:2}}>
-            {leg.duration.text}
-            </Text>
-          </View>
-          <Text style={styles.Text1}>
-            Steps:
-          </Text>
-          {leg.steps.map((step, stepIndex) => (
-            <View style={styles.box} key={stepIndex}>
-            <Text >
-              {step.html_instructions.replace(/<[^>]*>/g, "")}
-            </Text>
+        {textualDirections.map((leg, index) => {
+          const currentPoint = RouteFound ? routeInfo[index] : null;
+          const nextPoint = RouteFound ? routeInfo[index + 1] : null;
+          
+          const sourceIndex = RouteFound ? `Point ${index + 1}` : `Address: ${leg.start_address}`;
+          const destinationIndex = RouteFound ? `Point ${index + 2}` : `Address: ${leg.end_address}`;
+          const duration = leg.duration.text
+           
+          const expectedArrivalTime = RouteFound
+            ? getFormattedTime(nextPoint.arrival_time)
+            : getFormattedTime(
+                index === 0
+                  ? extractNumberFromDurationText(leg.duration.text)
+                  : extractNumberFromDurationText(leg.duration.text) + 5
+              );
+
+          return (
+            <View key={index} style={styles.heading}>
+              <View style={{ margin: 2 }}>
+                <Text style={styles.Text1}>Source: {sourceIndex}</Text>
+              </View>
+              <View style={{ margin: 2 }}>
+                <Text style={styles.Text1}>Destination: {destinationIndex}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', margin: 2 }}>
+                <Text style={styles.Text1}>Distance:</Text>
+                <Text style={{ textAlignVertical: 'center', margin: 2 }}>
+                  {leg.distance.text}
+                </Text>
+              </View>
+              <View style={{ flexDirection: 'row', margin: 2 }}>
+                <Text style={styles.Text1}>Duration:</Text>
+                <Text style={{ textAlignVertical: 'center', margin: 2 }}>
+                  {duration} 
+                </Text>
+              </View>
+              {RouteFound && (
+                <View style={{ margin: 2 }}>
+                  <Text style={styles.Text1}>
+                    Expected Departure from {sourceIndex}:
+                  </Text>
+                  <Text style={styles.box}>
+                    {currentPoint.index !== 0
+                      ? getFormattedTime(nextPoint.arrival_time -
+                        extractNumberFromDurationText(leg.duration.text) )
+                      : getFormattedTime(
+                          nextPoint.arrival_time -
+                            extractNumberFromDurationText(leg.duration.text)
+                        )}
+                  </Text>
+                </View>
+              )}
+             {RouteFound && <View style={{ margin: 2 }}>
+                <Text style={styles.Text1}>
+                  Expected Arrival at {destinationIndex}:
+                </Text>
+                <Text style={styles.box}>{expectedArrivalTime}</Text>
+              </View>}
+              {RouteFound && nextPoint.departure_time !== nextPoint.arrival_time && (
+                <View style={{ margin: 2 }}>
+                  <Text style={styles.Text1}>
+                    Extra Time Needed to be Waited at {sourceIndex}:
+                  </Text>
+                  <Text style={styles.box}>
+                    { nextPoint.arrival_time-extractNumberFromDurationText(leg.duration.text)-currentPoint.arrival_time-5} min
+                  </Text>
+                </View>
+              )}
+              <Text style={styles.Text1}>Steps:</Text>
+              {leg.steps.map((step, stepIndex) => (
+                <View style={styles.box} key={stepIndex}>
+                  <Text>{step.html_instructions.replace(/<[^>]*>/g, "")}</Text>
+                </View>
+              ))}
             </View>
-          ))}
-        </View>
-      ))}
-    </ScrollView>
+          );
+        })}
+      </ScrollView>
   </BottomSheetView>
 </BottomSheetModal>)}
         <Modal
