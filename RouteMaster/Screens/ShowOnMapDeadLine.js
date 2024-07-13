@@ -263,7 +263,7 @@ const [cumulativeTime, setCumulativeTime] = useState(0);
         };
         setLocations([...locations, newLocation]);
         setMarkers(prevMarkers => [...prevMarkers,{name:userName, latitude:marker.latitude, longitude: marker.longitude } ]);
-  
+        setMarker(null);
         setModalVisible(false);
         setShowConfirmButton(false);
         Alert.alert(
@@ -356,7 +356,8 @@ const [cumulativeTime, setCumulativeTime] = useState(0);
         latitude: location.latitude,
         longitude: location.longitude,
       }));
-  
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       // Append the current location to the beginning of the array
       if (cl) {
         latLongArray.unshift(cl);
@@ -392,8 +393,11 @@ const [cumulativeTime, setCumulativeTime] = useState(0);
             "Content-Type": "application/json",
           },
           body: JSON.stringify(requestData),
+          signal: controller.signal,
+
         });
-  
+        clearTimeout(timeoutId);
+
         const data = await response.json();
         if (!data) {
           // If data is null, show a toast and fetch shortest path using Directions API
@@ -479,8 +483,21 @@ const [cumulativeTime, setCumulativeTime] = useState(0);
   
         console.log("Optimized Route:", data);
       } catch (error) {
-        console.error("Error fetching optimized route:", error);
-      }
+        if (error.name === 'AbortError') {
+          console.error('Request timed out');
+          Toast.show({
+            type: "error",
+            text1: "Request timed out",
+            visibilityTime: 5000,
+          });
+        } else {
+          console.error("Error fetching optimized route:", error);
+          Toast.show({
+            type: "error",
+            text1: "Error fetching optimized route",
+            visibilityTime: 5000,
+          });
+        }      }
     };
   
     const calculateETA = (startTime, durationInSeconds) => {
