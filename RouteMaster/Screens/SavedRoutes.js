@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, StatusBar, Modal, Button, Switch } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, StatusBar, Modal, Switch, RefreshControl } from 'react-native';
 import { DataTable } from 'react-native-paper';
 import routeContext from '../context/routes/routeContext';
 import { FontAwesome5, MaterialIcons, Feather, Entypo } from '@expo/vector-icons';
@@ -20,6 +20,7 @@ const SavedRoutes = () => {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [deadline, setDeadline] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,11 +85,31 @@ const SavedRoutes = () => {
   const handleShowOnMap = (routeId, locations) => {
     navigation.navigate('ShowOnMapTW', { routeId, locations });
   };
+
   const handleShowOnMapDL = (routeId, locations) => {
     navigation.navigate('ShowOnMapDeadLine', { routeId, locations });
   };
 
   const routesToDisplay = deadline ? routes : twroutes;
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await getalltwroutes();
+      await getallroutes();
+      Toast.show({
+        type: 'success',
+        text1: 'Routes updated successfully',
+      });
+    } catch (error) {
+      console.error('Error refreshing routes:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error refreshing routes',
+      });
+    }
+    setRefreshing(false);
+  };
 
   return (
     <View style={styles.main}>
@@ -105,7 +126,12 @@ const SavedRoutes = () => {
           value={deadline}
         />
       </View>
-      <ScrollView style={styles.container}>
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {routesToDisplay && routesToDisplay.length > 0 ? (
           routesToDisplay.map((route, index) => (
             <View key={route._id}>
@@ -209,8 +235,6 @@ const SavedRoutes = () => {
                   </View>
                 </TouchableOpacity>
               </View>
-            {/* <Button title="Confirm" onPress={handleConfirm} /> */}
-            {/* <Button title="Cancel" onPress={() => setModalVisible(false)} /> */}
           </View>
         </View>
       </Modal>
