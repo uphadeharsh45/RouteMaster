@@ -143,6 +143,6 @@ console.log(timeMatrix,timeWindows,numVehicles)
       time_windows: timeWindows,
       num_vehicles: numVehicles
   });
-
+console.log(response.data)
   return response.data;
 }

@@ -14,7 +14,13 @@ def return_solution(data, manager, routing, solution):
         plan_output = f"Route for vehicle {vehicle_id}:\n"
         while not routing.IsEnd(index):
             time_var = time_dimension.CumulVar(index)
-            indexOrderOneVehicle.append(manager.IndexToNode(index))
+            arrival_time = solution.Min(time_var)
+            departure_time = solution.Max(time_var)
+            indexOrderOneVehicle.append({
+                "index": manager.IndexToNode(index),
+                "arrival_time": arrival_time,
+                "departure_time": departure_time
+            })
             plan_output += (
                 f"{manager.IndexToNode(index)}"
                 f" Time({solution.Min(time_var)},{solution.Max(time_var)})"
@@ -22,7 +28,13 @@ def return_solution(data, manager, routing, solution):
             )
             index = solution.Value(routing.NextVar(index))
         time_var = time_dimension.CumulVar(index)
-        indexOrderOneVehicle.append(manager.IndexToNode(index))
+        arrival_time = solution.Min(time_var)
+        departure_time = solution.Max(time_var)
+        indexOrderOneVehicle.append({
+            "index": manager.IndexToNode(index),
+            "arrival_time": arrival_time,
+            "departure_time": departure_time
+        })
         plan_output += (
             f"{manager.IndexToNode(index)}"
             f" Time({solution.Min(time_var)},{solution.Max(time_var)})\n"
@@ -51,7 +63,9 @@ def solve_vehicle_routing(time_matrix, time_windows, num_vehicles):
     def time_callback(from_index, to_index):
         from_node = manager.IndexToNode(from_index)
         to_node = manager.IndexToNode(to_index)
-        return int(data["time_matrix"][from_node][to_node] * 60)  # convert to minutes
+        travel_time = int(data["time_matrix"][from_node][to_node] * 60)  # convert to minutes
+        waiting_time = 5 if from_node != data['depot'] else 0  # Add 5 minutes waiting time for each stop except  depot
+        return travel_time + waiting_time
 
     transit_callback_index = routing.RegisterTransitCallback(time_callback)
 
@@ -67,7 +81,9 @@ def solve_vehicle_routing(time_matrix, time_windows, num_vehicles):
     )
     time_dimension = routing.GetDimensionOrDie(time)
 
+    print("Time windows:")
     for location_idx, time_window in enumerate(data["time_windows"]):
+        print(f"Location {location_idx}: {time_window}")
         if location_idx == data["depot"]:
             continue
         index = manager.NodeToIndex(location_idx)
