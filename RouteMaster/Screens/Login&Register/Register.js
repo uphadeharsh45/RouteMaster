@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     width: 100,
   },
   logo1:{
-    marginTop:20,
+    marginTop:5,
     height: 100,
     width: 100,
   },
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     paddingHorizontal: 20,
     paddingVertical: 20,
-    margin:20,
+    margin:15,
     shadowColor:'gold',
     elevation:2,
     shadowOpacity:1
@@ -451,6 +451,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop:-5
   },
   googleimg:{
     height:65,
