@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Text, Button, StyleSheet, Image } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 
 const NoInternet = ({ navigation }) => {
@@ -12,8 +12,11 @@ const NoInternet = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>No internet connection. Please check your connection.</Text>
-      <Button title="Retry" onPress={handleRetry} />
+      <Image source={require('../assets/wifi.png')} style={{width:150,height:150}}/>
+      <Text style={{fontSize:25,marginBottom:10,fontWeight:'600'}}>WHOOPS!!</Text>
+      <Text style={{fontSize:18,textAlign:'center',marginTop:20}}>No internet access.</Text>
+      <Text style={styles.text}>Please check your connection.</Text>
+      {/* <Button title="Retry" onPress={handleRetry} /> */}
     </View>
   );
 };
@@ -23,6 +26,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor:'#FFF6E9'
   },
   text: {
     fontSize: 18,
