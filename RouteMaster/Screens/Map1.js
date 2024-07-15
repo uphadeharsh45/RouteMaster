@@ -78,6 +78,7 @@ const Map1 = () => {
   const [presentTime, setPresentTime] = useState(new Date());
   const [RouteFound,setRouteFound]=useState(true);
   const [cumulativeTime, setCumulativeTime] = useState(0);
+  const [loading, setLoading] = useState(false); // Added loading state
 
 
 
@@ -249,6 +250,37 @@ const Map1 = () => {
   };
 
   const handleSubmit = () => {
+    if(locations.length===24)
+      {
+        Toast.show({
+          type: "error",
+          text1: "Max Limit Reached !",
+          text2: "You cannot enter more than 24 locations",
+          visibilityTime: 5000,
+        });
+        return;
+      }
+    if(startTime>endTime )
+    {
+      Toast.show({
+        type: "error",
+        text1: "Invalid time window",
+        text2: "End time cannot be less than start time",
+        visibilityTime: 5000,
+      });
+      return;
+    }
+    if(userMobile.length!==10)
+    {
+      
+      Toast.show({
+        type: "error",
+        text1: "Invalid Phone number",
+        text2: "Phone number should consist of exactly 10 digits",
+        visibilityTime: 5000,
+      });
+      return;
+    }
     if (userName && userMobile && startTime && endTime) {
       const newLocation = {
         name: userName,
@@ -365,6 +397,7 @@ const Map1 = () => {
 
   const handleGetDirections = async () => {
     setPresentTime(new Date());
+    setLoading(true); // Show loader
     const latLongArray = locations.map((location) => ({
       latitude: location.latitude,
       longitude: location.longitude,
@@ -512,6 +545,8 @@ const optimizedRouteCoordinates = data[0]
           visibilityTime: 5000,
         });
       }
+    }finally{
+      setLoading(false);
     }
   };
 
@@ -855,9 +890,12 @@ const optimizedRouteCoordinates = data[0]
                   style={styles.bottominBut}
                   onPress={handleGetDirections}
                 >
-                  <View>
-                    <Text style={styles.textSign}>GET DIRECTIONS</Text>
-                  </View>
+                  
+                  {loading ? (
+            <ActivityIndicator size="small" color="#fff" /> // Show loader
+          ) : (
+            <Text style={styles.textSign}>GET DIRECTIONS</Text>
+          )}                  
                 </TouchableOpacity>
               {/* <Button title="Save Route" onPress={handleSaveRoute} /> */}
               {/* <Button title="Get Directions" onPress={handleGetDirections} /> */}
