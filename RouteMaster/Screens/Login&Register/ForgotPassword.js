@@ -1,45 +1,54 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image,ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Toast from "react-native-toast-message";
 import Fontisto from "@expo/vector-icons/Fontisto";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false); // Added loading state
+
   const navigation = useNavigation();
 
   const handleSendCode = async () => {
+    setLoading(true); // Show loader
     const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-    const response = await fetch(`${apiUrl}/api/auth/forgot-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email }),
-    });
-
-    const json = await response.json();
-    if (json.success) {
-    //   Alert.alert("Success", "Verification code sent to your email.");
-    Toast.show({
-        type: "success",
-        text1: "Verification code has been sent to you email",
-        // text2: "Fill mandatory details",
-        visibilityTime: 5000,
+    try {
+      const response = await fetch(`${apiUrl}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
       });
-      navigation.navigate('ResetPassword', { email });
-    } else {
-    //   Alert.alert("Error", json.message);
-    Toast.show({
+
+      const json = await response.json();
+      if (json.success) {
+        Toast.show({
+          type: "success",
+          text1: "Verification code has been sent to your email",
+          visibilityTime: 5000,
+        });
+        navigation.navigate('ResetPassword', { email });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "There was some error while resetting password",
+          visibilityTime: 5000,
+        });
+      }
+    } catch (error) {
+      Toast.show({
         type: "error",
         text1: "Error",
         text2: "There was some error while resetting password",
-        // text2: "Fill mandatory details",
         visibilityTime: 5000,
       });
+    } finally {
+      setLoading(false); // Hide loader
     }
   };
-
   return (
     <View style={styles.container}>
       <Image
@@ -72,13 +81,16 @@ const ForgotPassword = () => {
           />
       </View>
       <TouchableOpacity
-              style={styles.inBut}
-              onPress={handleSendCode}
-            >
-              <View>
-                <Text style={styles.textSign}>Send Verification Code</Text>
-              </View>
-      </TouchableOpacity>
+          style={styles.inBut}
+          onPress={handleSendCode}
+          disabled={loading} // Disable button when loading
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#fff" /> // Show loader
+          ) : (
+            <Text style={styles.textSign}>Send Verification Code</Text>
+          )}
+        </TouchableOpacity>
       {/* <TouchableOpacity style={styles.button} onPress={handleSendCode}>
         <Text style={styles.buttonText}>Send Verification Code</Text>
       </TouchableOpacity> */}
