@@ -1,3 +1,5 @@
+import Toast from "react-native-toast-message";
+
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 
@@ -22,11 +24,19 @@ const SMS = async (Number,msg) => {
         console.log('SMS sent successfully');
         // Handle success, e.g., display a success message to the user
       } else {
+        Toast.show({
+          type: "error",
+          text1: `Failed to send SMS to ${Number}`,
+          // text2: "Showing shortest possible path",
+          visibilityTime: 5000,
+        });
         console.error('Failed to send SMS:', data.error);
         // Handle error, e.g., display an error message to the user
+       
       }
     } catch (error) {
       console.error('Error sending SMS:', error);
+      
       // Handle network errors or other unexpected errors
     }
   };
