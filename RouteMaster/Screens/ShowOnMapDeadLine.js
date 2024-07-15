@@ -465,7 +465,15 @@ const [loading, setLoading] = useState(false); // Added loading state
               // Update optimizedRoute state with the new optimized path
               setOptimizedRoute([latLongArray[0], ...newOptimizedRoute]); // Destination set to origin
               
-              setRouteFound(false); // Route is not found by original algorithm
+              const newarr=[latLongArray[0], ...newOptimizedRoute];
+              setRouteFound(false);
+              
+                const markersWithOrder1 = newarr.map((coordinate, index) => ({
+                  ...coordinate,
+                  order: index + 1, // Add order property
+                }));
+                clearMarkers();
+                setMarkersWithOrder(markersWithOrder1);
   
               // Additional logic if needed based on the fetched data
           } catch (error) {
@@ -624,7 +632,7 @@ const [loading, setLoading] = useState(false); // Added loading state
             }
   
             if (!RouteFound) {
-                accumulatedTime += durationInSeconds * 1000; // Update accumulated time to include current leg's duration
+              accumulatedTime += durationInSeconds * 1000+5*60*1000;// Update accumulated time to include current leg's duration
             }
         }
         Toast.show({
@@ -931,8 +939,8 @@ const [loading, setLoading] = useState(false); // Added loading state
           const currentPoint = RouteFound ? routeInfo[index] : null;
           const nextPoint = RouteFound ? routeInfo[index + 1] : null;
           
-          const sourceIndex = RouteFound ? `Point ${index + 1}` : `Address: ${leg.start_address}`;
-          const destinationIndex = RouteFound ? `Point ${index + 2}` : `Address: ${leg.end_address}`;
+          const sourceIndex =`Point ${index + 1}` ;
+          const destinationIndex = `Point ${index + 2}` ;
           const duration = leg.duration.text
            
           const expectedArrivalTime = RouteFound
