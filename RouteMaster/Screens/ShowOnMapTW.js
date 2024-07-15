@@ -199,7 +199,12 @@ import routeContext from "../context/routes/routeContext";
       // Remove the customer from the places array
       setLocations(prevLocations => prevLocations.filter(location => location.latitude !== latToDelete || location.longitude !== lngToDelete));
       setMarkers(prevMarkers => prevMarkers.filter(marker => marker.latitude !== latToDelete || marker.longitude !== lngToDelete))
-  
+      Toast.show({
+        type: "success",
+        text1: "Customer Deleted Successfully",
+        // text2: "Showing shortest possible path",
+        visibilityTime: 5000,
+      });
       // Remove the corresponding marker from the markers array
       // setMarkers([]);
       
@@ -553,7 +558,12 @@ import routeContext from "../context/routes/routeContext";
         console.log("Location Map:", locationMap);
 
         let accumulatedTime = presentTime.getTime(); // Start with current time in milliseconds
-
+        Toast.show({
+          type: "success",
+          text1: "Sending SMS",
+          // text2: "Showing shortest possible path",
+          visibilityTime: 5000,
+        });
         for (let i = 0; i < legs.length; i++) {
             const leg = legs[i];
             const durationInSeconds = leg.duration.value;
@@ -586,6 +596,12 @@ import routeContext from "../context/routes/routeContext";
                 accumulatedTime += durationInSeconds * 1000; // Update accumulated time to include current leg's duration
             }
         }
+        Toast.show({
+          type: "success",
+          text1: "SMS sent successfully",
+          // text2: "Showing shortest possible path",
+          visibilityTime: 5000,
+        });
     } catch (error) {
         console.error("Error fetching textual directions:", error);
     }

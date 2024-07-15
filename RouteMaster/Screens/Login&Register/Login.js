@@ -46,6 +46,8 @@ const Login = ({ setIsLoggedIn }) => {
   const navigation = useNavigation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
 
   const handleSubmit = async () => {
     const apiUrl = process.env.EXPO_PUBLIC_API_URL;
@@ -127,7 +129,16 @@ const Login = ({ setIsLoggedIn }) => {
               placeholder="Password"
               style={styles.textInput}
               onChangeText={(text) => setPassword(text)}
+              secureTextEntry={!showPassword}
             />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Feather
+                name={showPassword ? "eye" : "eye-off"}
+                style={{ marginRight: -10 }}
+                color="#34A751"
+                size={23}
+              />
+            </TouchableOpacity>
           </View>
           <View style={styles.loginbutton}>
             <TouchableOpacity
@@ -166,7 +177,7 @@ const Login = ({ setIsLoggedIn }) => {
             </View>
           </View>
         </View>
-        <View style={styles.button}>
+        {/* <View style={styles.button}>
           <View style={{ padding: 15 }}>
             <Text
               style={{ fontSize: 14, fontWeight: "bold", color: "#919191" }}
@@ -174,24 +185,7 @@ const Login = ({ setIsLoggedIn }) => {
               ----Or Continue with----
             </Text>
           </View>
-            {/*         
-          <View
-            style={{
-              alignItems: 'center', 
-              justifyContent: 'center',
-            }}>
-            <TouchableOpacity
-              style={styles.inBut2}
-              onPress={()=>{navigation.navigate('Register')}}
-             >
-              <FontAwesome
-                name="user-plus"
-                color="white"
-                style={[styles.smallIcon2, {fontSize: 30}]}
-              />
-            </TouchableOpacity>
-            <Text style={styles.bottomText}>Sign Up</Text>
-          </View> */}
+       
             <View style={{alignItems:'center'}}>
               <TouchableOpacity style={styles.inBut2}>
                 <Image
@@ -201,7 +195,7 @@ const Login = ({ setIsLoggedIn }) => {
               </TouchableOpacity>
               <Text style={styles.bottomText}>Google</Text>
             </View>
-          </View>
+          </View> */}
         </View>
     </ScrollView>
   );

@@ -27,6 +27,7 @@ const Register = ({ props }) => {
   const [password, setPassword] = useState("");
   const [passwordVerify, setPasswordVerify] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const navigation = useNavigation();
 
@@ -40,6 +41,17 @@ const Register = ({ props }) => {
       password,
     };
 
+    if (password !== confirmPassword) {
+      Toast.show({
+        type: "error",
+        text1: "Error!!",
+        text2: "Passwords do not match",
+        visibilityTime: 5000,
+      });
+      return;
+    }
+
+
     if (nameVerify && emailVerify && mobileVerify && passwordVerify) {
       const response = await fetch(`${apiUrl}/api/auth/createuser`, {
         method: "POST", // *GET, POST, PUT, DELETE, etc.
@@ -52,8 +64,12 @@ const Register = ({ props }) => {
       const json = await response.json();
       console.log(json);
       if (json.success) {
-        Alert.alert("Registered Successfully");
-        navigation.navigate("Login");
+        Toast.show({
+          type: "success",
+          text1: "Registered Successfully",
+          text2: "Welcome to RouteMaster",
+          visibilityTime: 5000,
+        });        navigation.navigate("Login");
       } else {
         Alert.alert(json.success);
       }
@@ -67,15 +83,7 @@ const Register = ({ props }) => {
       });
     }
 
-    // if (json.success) {
-    //   // Save the auth token and redirect
-    //   localStorage.setItem('token', json.authtoken);
-    //   navigate("/");
-    //   props.showAlert("Registered Successfully", "success")
-    // }
-    // else {
-    //   props.showAlert("Invalid credentials", "danger")
-    // }
+   
   };
 
   function handleName(e) {
@@ -108,13 +116,17 @@ const Register = ({ props }) => {
     }
   }
 
-  function handlePassword(e) {
+  function handlePassword(e, type) {
     const passwordVar = e.nativeEvent.text;
-    setPassword(passwordVar);
-    setPasswordVerify(false);
-    if (/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/.test(passwordVar)) {
+    if (type === "password") {
       setPassword(passwordVar);
-      setPasswordVerify(true);
+      setPasswordVerify(false);
+      if (/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/.test(passwordVar)) {
+        setPassword(passwordVar);
+        setPasswordVerify(true);
+      }
+    } else {
+      setConfirmPassword(passwordVar);
     }
   }
 
@@ -234,39 +246,13 @@ const Register = ({ props }) => {
             </Text>
           )}
 
-          <View style={styles.action}>
+<View style={styles.action}>
             <FontAwesome name="lock" color="#34A751" style={styles.smallIcon} />
             <TextInput
               placeholder="Password"
               style={styles.textInput}
-              onChange={(e) => handlePassword(e)}
-              secureTextEntry={showPassword}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              {password.length < 1 ? null : !showPassword ? (
-                <Feather
-                  name="eye-off"
-                  style={{ marginRight: -10 }}
-                  color={passwordVerify ? "green" : "red"}
-                  size={23}
-                />
-              ) : (
-                <Feather
-                  name="eye"
-                  style={{ marginRight: -10 }}
-                  color={passwordVerify ? "green" : "red"}
-                  size={23}
-                />
-              )}
-            </TouchableOpacity>
-          </View>
-          <View style={styles.action}>
-            <FontAwesome name="lock" color="#34A751" style={styles.smallIcon} />
-            <TextInput
-              placeholder="Confirm Password"
-              style={styles.textInput}
-              onChange={(e) => handlePassword(e)}
-              secureTextEntry={showPassword}
+              onChange={(e) => handlePassword(e, "password")}
+              secureTextEntry={!showPassword}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               {password.length < 1 ? null : !showPassword ? (
@@ -293,7 +279,46 @@ const Register = ({ props }) => {
                 color: "red",
               }}
             >
-              Uppercase, Lowercase, Number and 6 or more characters.
+              Password should have at least 6 characters with at least 1
+              numeric character, 1 lowercase and 1 uppercase character
+            </Text>
+          )}
+          <View style={styles.action}>
+            <FontAwesome name="lock" color="#34A751" style={styles.smallIcon} />
+            <TextInput
+              placeholder="Confirm Password"
+              style={styles.textInput}
+              onChange={(e) => handlePassword(e, "confirmPassword")}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              {confirmPassword.length < 1 ? null : !showPassword ? (
+                <Feather
+                  name="eye-off"
+                  style={{ marginRight: -10 }}
+                  color={confirmPassword === password ? "green" : "red"}
+                  size={23}
+                />
+              ) : (
+                <Feather
+                  name="eye"
+                  style={{ marginRight: -10 }}
+                  color={confirmPassword === password ? "green" : "red"}
+                  size={23}
+                />
+              )}
+            </TouchableOpacity>
+          </View>
+
+          
+          {confirmPassword.length < 1 ? null : confirmPassword === password ? null : (
+            <Text
+              style={{
+                marginLeft: 20,
+                color: "red",
+              }}
+            >
+              Passwords do not match
             </Text>
           )}
           <View style={styles.registerbutton}>
@@ -309,7 +334,7 @@ const Register = ({ props }) => {
             </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.button}>
+        {/* <View style={styles.button}>
           <View style={{ padding: 15 }}>
             <Text
               style={{ fontSize: 14, fontWeight: "bold", color: "#919191" }}
@@ -326,6 +351,19 @@ const Register = ({ props }) => {
               </TouchableOpacity>
               <Text style={styles.bottomText}>Google</Text>
             </View>
+          </View> */}
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.loginText}>Already have an account ? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+              <Text
+                style={[
+                  styles.loginText,
+                  { fontWeight: 500, color: "#F0BF72" },
+                ]}
+              >
+                Login
+              </Text>
+            </TouchableOpacity>
           </View>
       </View>
     </ScrollView>
