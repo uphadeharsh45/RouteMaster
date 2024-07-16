@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 
 app = Flask(__name__)
+CORS(app)
 
 def return_solution(data, manager, routing, solution):
     indexOrderAllVehicles = []
@@ -123,5 +125,5 @@ def solve_vrp():
     vrp_result = solve_vehicle_routing(time_matrix, time_windows, waiting_time, num_vehicles)
     return jsonify(vrp_result)
 
-if __name__ == "__main__":
-    app.run(port=3000)
+# if __name__ == "__main__":
+#     app.run(port=3000)
