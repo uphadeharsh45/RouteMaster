@@ -16,6 +16,7 @@ import React, {
     Alert,
     TouchableOpacity,
     Modal,
+    FlatList,
     
   } from "react-native";
   import MapView, { Marker } from "react-native-maps";
@@ -44,7 +45,8 @@ import React, {
   import { useRoute } from '@react-navigation/native';
   import { useContext } from 'react';
   import routeContext from "../context/routes/routeContext";
-  
+  import * as Contacts from 'expo-contacts';
+
   
   const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
   const { width, height } = Dimensions.get("window");
@@ -85,6 +87,9 @@ const [presentTime, setPresentTime] = useState(new Date());
 const [RouteFound,setRouteFound]=useState(true);
 const [cumulativeTime, setCumulativeTime] = useState(0);
 const [loading, setLoading] = useState(false); // Added loading state
+const [contactModalVisible, setContactModalVisible] = useState(false);
+  const [contacts, setContacts] = useState([]);
+  const [search, setSearch] = useState('');
 
   
     const mapRef = useRef(null);
@@ -180,7 +185,32 @@ const [loading, setLoading] = useState(false); // Added loading state
     }, []);
   
     
+    useEffect(() => {
+      const fetchContacts = async () => {
+        const { status } = await Contacts.requestPermissionsAsync();
+        if (status === 'granted') {
+          const { data } = await Contacts.getContactsAsync({
+            fields: [Contacts.Fields.Name, Contacts.Fields.PhoneNumbers],
+          });
+          setContacts(data);
+        }
+      };
   
+      fetchContacts();
+    }, []);
+  
+    const handleContactSelect = (contact) => {
+      setUserName(contact.name);
+      if (contact.phoneNumbers && contact.phoneNumbers.length > 0) {
+        setUserMobile(contact.phoneNumbers[0].number);
+      }
+      setContactModalVisible(false);
+    };
+  
+    const filteredContacts = contacts.filter(contact =>
+      contact.name.toLowerCase().includes(search.toLowerCase())
+    );
+    
     
     const handleConfirmLocation = () => {
       setModalVisible(true);
@@ -304,6 +334,8 @@ const [loading, setLoading] = useState(false); // Added loading state
         setMarker(null);
         setModalVisible(false);
         setShowConfirmButton(false);
+        setUserMobile("");
+        setUserName("");
         Alert.alert(
           "Location Confirmed",
           `Name: ${userName}\nMobile: ${userMobile}\nDelivery Deadline Time:  ${formatTime(endTime)}`
@@ -388,7 +420,6 @@ const [loading, setLoading] = useState(false); // Added loading state
     };
   
     const handleGetDirections = async () => {
-      setPresentTime(new Date());
       setLoading(true); // Show loader
 
       const latLongArray = locations.map((location) => ({
@@ -546,6 +577,8 @@ const [loading, setLoading] = useState(false); // Added loading state
           });
         }      }finally{
           setLoading(false);
+          setPresentTime(new Date());
+
         }
     };
   
@@ -991,83 +1024,125 @@ const [loading, setLoading] = useState(false); // Added loading state
     </ScrollView>
     </BottomSheetView>
   </BottomSheetModal>)}
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={modalVisible}
-            onRequestClose={() => {
-              setModalVisible(!modalVisible);
-            }}
+  <Modal
+      animationType="slide"
+      transparent={true}
+      visible={modalVisible}
+      onRequestClose={() => {
+        setModalVisible(!modalVisible);
+      }}
+    >
+      <View style={styles.overlay}>
+        <View style={styles.modalView}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setModalVisible(!modalVisible)}
           >
-            <View style={styles.overlay}>
-              <View style={styles.modalView}>
-                {/* <Text style={{fontSize:20}}>Customer Details</Text> */}
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setModalVisible(!modalVisible)}
-                >
-                  <Entypo name="cross" size={30} color="black" />
-                </TouchableOpacity>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Name"
-                  value={userName}
-                  onChangeText={setUserName}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Mobile"
-                  value={userMobile}
-                  onChangeText={setUserMobile}
-                  keyboardType="phone-pad"
-                />
-                {/* <TouchableOpacity onPress={() => setShowStartPicker(true)}>
-                  <Text style={styles.timeText}>
-                    START TIME: {formatTime(startTime)}
-                  </Text>
-                </TouchableOpacity>
-                {showStartPicker && (
-                  <DateTimePicker
-                    value={startTime}
-                    mode="time"
-                    is24Hour={false}
-                    display="default"
-                    onChange={(event, selectedTime) => {
-                      setShowStartPicker(false);
-                      setStartTime(selectedTime || startTime);
-                    }}
-                  />
-                )} */}
-                <TouchableOpacity onPress={() => setShowEndPicker(true)}>
-                  <Text style={styles.timeText}>
-                    END TIME: {formatTime(endTime)}
-                  </Text>
-                </TouchableOpacity>
-                {showEndPicker && (
-                  <DateTimePicker
-                    value={endTime}
-                    mode="time"
-                    is24Hour={false}
-                    display="default"
-                    onChange={(event, selectedTime) => {
-                      setShowEndPicker(false);
-                      setEndTime(selectedTime || endTime);
-                    }}
-                  />
-                )}
-                <View style={styles.loginbutton}>
-                  <TouchableOpacity
-                    style={styles.inBut}
-                    onPress={handleSubmit}
-                  >
-                    <View>
-                      <Text style={styles.textSign}>SUBMIT</Text>
-                    </View>
-                  </TouchableOpacity>
-                </View>
+            <Entypo name="cross" size={30} color="black" />
+          </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            placeholder="Name"
+            value={userName}
+            onChangeText={setUserName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Mobile"
+            value={userMobile}
+            onChangeText={setUserMobile}
+            keyboardType="phone-pad"
+          />
+          <TouchableOpacity onPress={() => setContactModalVisible(true)}>
+            <Text style={styles.contactPickerText}>Select from Contacts</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowStartPicker(true)}>
+            <Text style={styles.timeText}>
+              START TIME: {formatTime(startTime)}
+            </Text>
+          </TouchableOpacity>
+          {showStartPicker && (
+            <DateTimePicker
+              value={startTime}
+              mode="time"
+              is24Hour={false}
+              display="default"
+              onChange={(event, selectedTime) => {
+                setShowStartPicker(false);
+                setStartTime(selectedTime || startTime);
+              }}
+            />
+          )}
+          <TouchableOpacity onPress={() => setShowEndPicker(true)}>
+            <Text style={styles.timeText}>
+              END TIME: {formatTime(endTime)}
+            </Text>
+          </TouchableOpacity>
+          {showEndPicker && (
+            <DateTimePicker
+              value={endTime}
+              mode="time"
+              is24Hour={false}
+              display="default"
+              onChange={(event, selectedTime) => {
+                setShowEndPicker(false);
+                setEndTime(selectedTime || endTime);
+              }}
+            />
+          )}
+          <View style={styles.loginbutton}>
+            <TouchableOpacity
+              style={styles.inBut}
+              onPress={handleSubmit}
+            >
+              <View>
+                <Text style={styles.textSign}>SUBMIT</Text>
               </View>
-            </View>
-          </Modal>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={contactModalVisible}
+        onRequestClose={() => {
+          setContactModalVisible(!contactModalVisible);
+        }}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.contactModalView}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setContactModalVisible(!contactModalVisible)}
+            >
+              <Entypo name="cross" size={30} color="black" />
+            </TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              placeholder="Search Contacts"
+              value={search}
+              onChangeText={setSearch}
+            />
+            <FlatList
+              data={filteredContacts}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity onPress={() => handleContactSelect(item)}>
+                  <View style={styles.contactItem}>
+                    <Text style={styles.contactName}>{item.name}</Text>
+                    {item.phoneNumbers && item.phoneNumbers.length > 0 && (
+                      <Text style={styles.contactNumber}>{item.phoneNumbers[0].number}</Text>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
+    </Modal>
         </View>
       </BottomSheetModalProvider>
     );
@@ -1262,6 +1337,40 @@ const [loading, setLoading] = useState(false); // Added loading state
     orderText: {
       fontWeight: 'bold',
       color: 'black',
+    },
+    contactItem: {
+      padding: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: 'gray',
+    },
+    contactName: {
+      fontSize: 16,
+    },
+    contactNumber: {
+      fontSize: 14,
+      color: 'gray',
+    },
+    contactPickerText: {
+      color: '#34A751',
+      marginBottom: 20,
+      textAlign: 'center',
+    },
+    contactModalView: {
+      width: '90%',
+      height: '80%',
+      backgroundColor: 'white',
+      borderRadius: 15,
+      paddingVertical: 30,
+      paddingHorizontal: 20,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+      position: 'relative',
     },
   });
   
