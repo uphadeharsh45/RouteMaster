@@ -131,9 +131,10 @@ async function sendToPython(timeMatrix, timeWindows, numVehicles,waitTime) {
   console.log('Time Matrix Size:', timeMatrix.length);
   console.log('Time Windows Size:', timeWindows.length);
   console.log('Number of Vehicles:', numVehicles);
+  const python_url=process.env.PYTHON_URL
 
   try {
-    const response = await axios.post('http://localhost:3000/solve-vrp', {
+    const response = await axios.post(`${python_url}/solve-vrp`, {
       time_matrix: timeMatrix,
       time_windows: timeWindows,
       num_vehicles: numVehicles,
