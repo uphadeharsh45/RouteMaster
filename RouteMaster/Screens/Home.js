@@ -66,8 +66,8 @@ const Home = () => {
     console.log('Rendering slide:', item);
     return(
     <View>
-      <Text style={{fontSize:30,textAlign:'center'}}>{item.title}</Text>
-      <Image source={item.image} style={{height:300,width:400}} />
+      {/* <Text style={{fontSize:30,textAlign:'center'}}>{item.title}</Text> */}
+      <Image source={item.image} style={{height:300,width:355}} />
     </View>
     );
   }
@@ -78,7 +78,7 @@ const Home = () => {
       <AppIntroSlider 
       data={slides}
       renderItem={renderSlide}
-      style={{height:300,width:'auto',borderWidth:1}}
+      style={{height:300,width:350,borderWidth:1}}
       />
         <Text style={styles.headingStyle}>React Native Navigation</Text>
         <Text style={styles.textStyle}>This is Home Screen</Text>    

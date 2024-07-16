@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     padding:20,
   },
   logo:{
-    marginTop:20,
+    marginTop:-80,
     height: 100,
     width: 100,
   },
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   text_header: {
-    color: '#18b152',
+    color: '#34A751',
     fontWeight: 'bold',
     fontSize: 30,
     textAlign:'center'
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   },
   inBut: {
     width: '70%',
-    backgroundColor: '#18b152',
+    backgroundColor: '#34A751',
     alignItems: 'center',
     paddingHorizontal: 15,
     paddingVertical: 15,

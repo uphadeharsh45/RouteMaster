@@ -6,7 +6,7 @@ const {
   TouchableOpacity,
   ScrollView,
   Alert,
-  StyleSheet
+  StyleSheet,
 } = require("react-native");
 import { useNavigation } from "@react-navigation/native";
 import Feather from "@expo/vector-icons/Feather";
@@ -51,7 +51,6 @@ const Register = ({ props }) => {
       return;
     }
 
-
     if (nameVerify && emailVerify && mobileVerify && passwordVerify) {
       const response = await fetch(`${apiUrl}/api/auth/createuser`, {
         method: "POST", // *GET, POST, PUT, DELETE, etc.
@@ -69,7 +68,8 @@ const Register = ({ props }) => {
           text1: "Registered Successfully",
           text2: "Welcome to RouteMaster",
           visibilityTime: 5000,
-        });        navigation.navigate("Login");
+        });
+        navigation.navigate("Login");
       } else {
         Alert.alert(json.success);
       }
@@ -82,8 +82,6 @@ const Register = ({ props }) => {
         visibilityTime: 5000,
       });
     }
-
-   
   };
 
   function handleName(e) {
@@ -136,18 +134,22 @@ const Register = ({ props }) => {
       keyboardShouldPersistTaps={"always"}
     >
       <View style={styles.container}>
-      <Image
+        <Image
           style={styles.bg}
           source={require("../../assets/bg_login.jpg")}
-          />
+        />
         <View style={styles.logoContainer}>
-        <Image
+          <Image
             style={styles.logo1}
             source={require("../../assets/rml.png")}
           />
-          <View style={{flexDirection:'row'}}>
-            <Text style={{fontSize:20,color:'#F0BF72',fontWeight:600}}>Route</Text>
-            <Text style={{fontSize:20,color:'#34A751',fontWeight:600}}>Master</Text>
+          <View style={{ flexDirection: "row" }}>
+            <Text style={{ fontSize: 20, color: "#F0BF72", fontWeight: 600 }}>
+              Route
+            </Text>
+            <Text style={{ fontSize: 20, color: "#34A751", fontWeight: 600 }}>
+              Master
+            </Text>
           </View>
         </View>
         <View style={styles.loginContainer}>
@@ -183,11 +185,7 @@ const Register = ({ props }) => {
           )}
 
           <View style={styles.action}>
-            <Fontisto
-              name="email"
-              color="#34A751"
-              style={styles.smallIcon}
-            />
+            <Fontisto name="email" color="#34A751" style={styles.smallIcon} />
             <TextInput
               placeholder="Email"
               style={styles.textInput}
@@ -246,7 +244,7 @@ const Register = ({ props }) => {
             </Text>
           )}
 
-<View style={styles.action}>
+          <View style={styles.action}>
             <FontAwesome name="lock" color="#34A751" style={styles.smallIcon} />
             <TextInput
               placeholder="Password"
@@ -279,8 +277,8 @@ const Register = ({ props }) => {
                 color: "red",
               }}
             >
-              Password should have at least 6 characters with at least 1
-              numeric character, 1 lowercase and 1 uppercase character
+              Password should have at least 6 characters with at least 1 numeric
+              character, 1 lowercase and 1 uppercase character
             </Text>
           )}
           <View style={styles.action}>
@@ -310,8 +308,8 @@ const Register = ({ props }) => {
             </TouchableOpacity>
           </View>
 
-          
-          {confirmPassword.length < 1 ? null : confirmPassword === password ? null : (
+          {confirmPassword.length < 1 ? null : confirmPassword ===
+            password ? null : (
             <Text
               style={{
                 marginLeft: 20,
@@ -334,6 +332,19 @@ const Register = ({ props }) => {
             </TouchableOpacity>
           </View>
         </View>
+          <View style={{ flexDirection: "row", alignItems: "center",justifyContent:'center',marginTop:-10 }}>
+            <Text style={styles.loginText}>Already have an account ? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+              <Text
+                style={[
+                  styles.loginText,
+                  { fontWeight: 500, color: "#F0BF72" },
+                ]}
+              >
+                Login
+              </Text>
+            </TouchableOpacity>
+          </View>
         {/* <View style={styles.button}>
           <View style={{ padding: 15 }}>
             <Text
@@ -352,19 +363,6 @@ const Register = ({ props }) => {
               <Text style={styles.bottomText}>Google</Text>
             </View>
           </View> */}
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={styles.loginText}>Already have an account ? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-              <Text
-                style={[
-                  styles.loginText,
-                  { fontWeight: 500, color: "#F0BF72" },
-                ]}
-              >
-                Login
-              </Text>
-            </TouchableOpacity>
-          </View>
       </View>
     </ScrollView>
   );
@@ -372,158 +370,158 @@ const Register = ({ props }) => {
 
 const styles = StyleSheet.create({
   mainContainer: {
-    backgroundColor: 'green',
+    backgroundColor: "green",
   },
-  container:{
+  container: {
     flex: 1,
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor:'#FFF6E9'
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFF6E9",
   },
-  bg:{
-    position: 'absolute',
+  bg: {
+    position: "absolute",
     top: 0,
     left: 0,
-    resizeMode: 'cover',
-    width:'100%',
-    height:300,
-    opacity:0.3
+    resizeMode: "cover",
+    width: "100%",
+    height: 300,
+    opacity: 0.3,
   },
   textSign: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
   },
   smallIcon: {
     marginRight: 10,
     fontSize: 24,
-    width:25
+    width: 25,
   },
   logoContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
-  logo:{
-    marginTop:100,
+  logo: {
+    marginTop: 100,
     height: 100,
     width: 100,
   },
-  logo1:{
-    marginTop:5,
+  logo1: {
+    marginTop: -30,
     height: 100,
     width: 100,
   },
   text_footer: {
-    color: '#05375a',
+    color: "#05375a",
     fontSize: 18,
   },
   action: {
     flexDirection: 'row',
-    paddingTop: 9,
-    paddingBottom: 9,
+    paddingTop: 10,
+    paddingBottom: 10,
     marginTop: 15,
     paddingHorizontal: 15,
     borderWidth: 1,
     borderColor: 'gold',
-    borderRadius: 10,
+    borderRadius: 12,
   },
   textInput: {
     flex: 1,
-    marginTop: -3,
+    marginTop: -4,
 
     color: '#05375a',
   },
   loginContainer: {
-    width:'92%',
-    backgroundColor: '#fff',
+    width: "93%",
+    backgroundColor: "#fff",
     borderRadius: 30,
     paddingHorizontal: 20,
     paddingVertical: 20,
-    margin:15,
-    shadowColor:'gold',
-    elevation:2,
-    shadowOpacity:1
+    margin: 20,
+    shadowColor: "gold",
+    elevation: 2,
+    shadowOpacity: 1,
   },
   header: {
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
     paddingHorizontal: 20,
   },
   text_header: {
-    color: '#18b152',
-    fontWeight: 'bold',
+    color: "#34A751",
+    fontWeight: "bold",
     fontSize: 30,
-    textAlign:'center'
+    textAlign: "center",
   },
   loginbutton: {
-    alignItems: 'center',
-    alignItems: 'center',
-    textAlign: 'center',
-    marginTop: 20
+    alignItems: "center",
+    alignItems: "center",
+    textAlign: "center",
+    marginTop: 20,
   },
   registerbutton: {
-    alignItems: 'center',
-    alignItems: 'center',
-    textAlign: 'center',
-    marginTop: 20
+    alignItems: "center",
+    alignItems: "center",
+    textAlign: "center",
+    marginTop: 20,
   },
   button: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: -20,
-    alignItems: 'center',
-    textAlign: 'center',
+    alignItems: "center",
+    textAlign: "center",
     margin: 20,
   },
   inBut: {
-    width: '70%',
-    backgroundColor: '#18b152',
-    alignItems: 'center',
+    width: "70%",
+    backgroundColor: "#34A751",
+    alignItems: "center",
     paddingHorizontal: 15,
     paddingVertical: 15,
     borderRadius: 50,
   },
   inBut2: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     height: 65,
     width: 65,
     borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop:-5
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: -5,
   },
-  googleimg:{
-    height:65,
-    width:65
+  googleimg: {
+    height: 65,
+    width: 65,
   },
   smallIcon2: {
     fontSize: 40,
     // marginRight: 10,
   },
   bottomText: {
-    color: 'black',
+    color: "black",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 5,
   },
   radioButton_div: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   radioButton_inner_div: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
   },
   radioButton_title: {
     fontSize: 20,
-    color: '#420475',
+    color: "#420475",
   },
   radioButton_text: {
     fontSize: 16,
-    color: 'black',
+    color: "black",
   },
 });
 
