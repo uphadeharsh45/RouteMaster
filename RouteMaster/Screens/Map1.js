@@ -84,7 +84,7 @@ const Map1 = () => {
   const [contactModalVisible, setContactModalVisible] = useState(false);
   const [contacts, setContacts] = useState([]);
   const [search, setSearch] = useState('');
-
+  const [waitTime,setWaitTime]=useState(null);
 
 
   const mapRef = useRef(null);
@@ -188,6 +188,38 @@ const Map1 = () => {
     };
 
     fetchContacts();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        console.log(token);
+        const response = await fetch(`${apiUrl}/api/auth/userdata`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          const { waitTime } = result.data;
+        setWaitTime(waitTime);
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (error) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error fetching user data',
+          text2: error.message,
+        });
+      }
+    };
+
+    fetchUserData();
   }, []);
 
   const handleContactSelect = (contact) => {
@@ -461,6 +493,7 @@ const Map1 = () => {
       timeWindows: timeWindows,
       numVehicles: 1,
       startTime: currentFormattedTime,
+      waitTime:waitTime
     };
     try {
       const response = await fetch(`${apiUrl}/get-travel-times`, {
@@ -658,7 +691,7 @@ const optimizedRouteCoordinates = data[0]
                 index = routeInfo[i].index;
             } else {
                 arrivalTime = accumulatedTime + durationInSeconds * 1000; // Estimated arrival time
-                departureTime = accumulatedTime + durationInSeconds * 1000 + 5 * 60 * 1000; // Estimated departure time (5 minutes after arrival)
+                departureTime = accumulatedTime + durationInSeconds * 1000 + waitTime * 60 * 1000; // Estimated departure time (5 minutes after arrival)
                 index = i;
             }
 
@@ -674,7 +707,7 @@ const optimizedRouteCoordinates = data[0]
             }
 
             if (!RouteFound) {
-                accumulatedTime += durationInSeconds * 1000+5*60*1000; // Update accumulated time to include current leg's duration
+                accumulatedTime += durationInSeconds * 1000+waitTime*60*1000; // Update accumulated time to include current leg's duration
             }
         }
         Toast.show({
@@ -992,7 +1025,7 @@ const optimizedRouteCoordinates = data[0]
             : getFormattedTime(
                 index === 0
                   ? extractNumberFromDurationText(leg.duration.text)
-                  : extractNumberFromDurationText(leg.duration.text) + 5
+                  : extractNumberFromDurationText(leg.duration.text) + waitTime
               );
 
           return (
@@ -1037,13 +1070,13 @@ const optimizedRouteCoordinates = data[0]
                 </Text>
                 <Text style={styles.box}>{expectedArrivalTime}</Text>
               </View>}
-              {RouteFound && nextPoint.departure_time !== nextPoint.arrival_time && (
+              {RouteFound && currentPoint.departure_time !== currentPoint.arrival_time && (
                 <View style={{ margin: 2 }}>
                   <Text style={styles.Text1}>
                     Extra Time Needed to be Waited at {sourceIndex}:
                   </Text>
                   <Text style={styles.box}>
-                    { nextPoint.arrival_time-extractNumberFromDurationText(leg.duration.text)-currentPoint.arrival_time-5} min
+                    { nextPoint.arrival_time-extractNumberFromDurationText(leg.duration.text)-currentPoint.arrival_time-waitTime} min
                   </Text>
                 </View>
               )}

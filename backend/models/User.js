@@ -22,7 +22,8 @@ const UserSchema = new Schema({
    image:String,
    gender:String,
    verificationCode: { type: String },
-   verificationCodeExpires: { type: Date }
+   verificationCodeExpires: { type: Date },
+   waitTime:String,
   });
 
 const User=mongoose.model('user',UserSchema);

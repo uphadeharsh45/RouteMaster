@@ -16,7 +16,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/routes', require('./routes/Routes'));
 
 app.post('/get-travel-times', async (req, res) => {
-  const { locations, timeWindows, numVehicles, startTime } = req.body;
+  const { locations, timeWindows, numVehicles, startTime,waitTime } = req.body;
   console.log('Request Body:', req.body);
 
   if (!locations || !Array.isArray(locations) || !timeWindows || !Array.isArray(timeWindows)) {
@@ -35,7 +35,7 @@ app.post('/get-travel-times', async (req, res) => {
     console.log('Travel Times:', travelTimes);
     console.log('Final Time Windows:', finalTimeWindows);
 
-    const result = await sendToPython(travelTimes, finalTimeWindows, numVehicles);
+    const result = await sendToPython(travelTimes, finalTimeWindows, numVehicles,waitTime);
     res.json(result);
   } catch (error) {
     console.error('Error in processing:', error);
@@ -127,7 +127,7 @@ function timeToHours(time) {
   return hours + (minutes / 60);
 }
 
-async function sendToPython(timeMatrix, timeWindows, numVehicles) {
+async function sendToPython(timeMatrix, timeWindows, numVehicles,waitTime) {
   console.log('Time Matrix Size:', timeMatrix.length);
   console.log('Time Windows Size:', timeWindows.length);
   console.log('Number of Vehicles:', numVehicles);
@@ -136,7 +136,8 @@ async function sendToPython(timeMatrix, timeWindows, numVehicles) {
     const response = await axios.post('http://localhost:3000/solve-vrp', {
       time_matrix: timeMatrix,
       time_windows: timeWindows,
-      num_vehicles: numVehicles
+      num_vehicles: numVehicles,
+      waiting_time:waitTime
     }, { timeout: 30000 }); // 30 seconds timeout
 
     console.log(response.data);

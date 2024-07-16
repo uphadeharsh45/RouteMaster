@@ -46,10 +46,11 @@ def return_solution(data, manager, routing, solution):
     print(f"Total time of all routes: {total_time}min")
     return indexOrderAllVehicles
 
-def solve_vehicle_routing(time_matrix, time_windows, num_vehicles):
+def solve_vehicle_routing(time_matrix, time_windows, waiting_time, num_vehicles):
     data = {
         "time_matrix": time_matrix,
         "time_windows": [tuple(map(lambda x: max(0, int(x * 60)), tw)) for tw in time_windows],  # Ensure non-negative time windows
+        "waiting_time": waiting_time,
         "num_vehicles": num_vehicles,
         "depot": 0
     }
@@ -64,7 +65,7 @@ def solve_vehicle_routing(time_matrix, time_windows, num_vehicles):
         from_node = manager.IndexToNode(from_index)
         to_node = manager.IndexToNode(to_index)
         travel_time = int(data["time_matrix"][from_node][to_node] * 60)  # convert to minutes
-        waiting_time = 5 if from_node != data['depot'] else 0  # Add 5 minutes waiting time for each stop except  depot
+        waiting_time = int(data['waiting_time']) if from_node != data['depot'] else 0  # Add uniform waiting time except at depot
         return travel_time + waiting_time
 
     transit_callback_index = routing.RegisterTransitCallback(time_callback)
@@ -116,9 +117,10 @@ def solve_vrp():
     data = request.get_json()
     time_matrix = data['time_matrix']
     time_windows = data['time_windows']
+    waiting_time = data['waiting_time']
     num_vehicles = data['num_vehicles']
 
-    vrp_result = solve_vehicle_routing(time_matrix, time_windows, num_vehicles)
+    vrp_result = solve_vehicle_routing(time_matrix, time_windows, waiting_time, num_vehicles)
     return jsonify(vrp_result)
 
 if __name__ == "__main__":

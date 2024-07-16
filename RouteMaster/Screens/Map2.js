@@ -84,6 +84,7 @@ const [loading, setLoading] = useState(false); // Added loading state
 const [contactModalVisible, setContactModalVisible] = useState(false);
   const [contacts, setContacts] = useState([]);
   const [search, setSearch] = useState('');
+  const [waitTime,setWaitTime]=useState(null);
 
   const mapRef = useRef(null);
   const bottomSheetModalRef = useRef(null);
@@ -186,6 +187,38 @@ const [contactModalVisible, setContactModalVisible] = useState(false);
     };
 
     fetchContacts();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        console.log(token);
+        const response = await fetch(`${apiUrl}/api/auth/userdata`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          const { waitTime } = result.data;
+        setWaitTime(waitTime);
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (error) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error fetching user data',
+          text2: error.message,
+        });
+      }
+    };
+
+    fetchUserData();
   }, []);
 
   const handleContactSelect = (contact) => {
@@ -461,6 +494,8 @@ const [contactModalVisible, setContactModalVisible] = useState(false);
       timeWindows: timeWindows,
       numVehicles: 1,
       startTime: currentFormattedTime,
+      waitTime:waitTime
+
     };
     try {
       const response = await fetch(`${apiUrl}/get-travel-times`, {
@@ -673,7 +708,7 @@ const handleSMS = async () => {
           }
 
           if (!RouteFound) {
-            accumulatedTime += durationInSeconds * 1000+5*60*1000; // Update accumulated time to include current leg's duration
+            accumulatedTime += durationInSeconds * 1000+waitTime*60*1000;  // Update accumulated time to include current leg's duration
           }
       }
       Toast.show({

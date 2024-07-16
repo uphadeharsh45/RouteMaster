@@ -90,7 +90,8 @@ import * as Contacts from 'expo-contacts';
   const [contactModalVisible, setContactModalVisible] = useState(false);
   const [contacts, setContacts] = useState([]);
   const [search, setSearch] = useState('');
-  
+  const [waitTime,setWaitTime]=useState(null);
+
 
     const mapRef = useRef(null);
     const bottomSheetModalRef = useRef(null);
@@ -197,6 +198,38 @@ import * as Contacts from 'expo-contacts';
       fetchContacts();
     }, []);
   
+    useEffect(() => {
+      const fetchUserData = async () => {
+        try {
+          const token = await AsyncStorage.getItem('token');
+          console.log(token);
+          const response = await fetch(`${apiUrl}/api/auth/userdata`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token }),
+          });
+  
+          const result = await response.json();
+          if (response.ok) {
+            const { waitTime } = result.data;
+          setWaitTime(waitTime);
+          } else {
+            throw new Error(result.error);
+          }
+        } catch (error) {
+          Toast.show({
+            type: 'error',
+            text1: 'Error fetching user data',
+            text2: error.message,
+          });
+        }
+      };
+  
+      fetchUserData();
+    }, []);
+
     const handleContactSelect = (contact) => {
       setUserName(contact.name);
       if (contact.phoneNumbers && contact.phoneNumbers.length > 0) {
@@ -454,6 +487,8 @@ import * as Contacts from 'expo-contacts';
         timeWindows: timeWindows,
         numVehicles: 1,
         startTime: currentFormattedTime,
+        waitTime:waitTime
+
       };
       try {
         const response = await fetch(`${apiUrl}/get-travel-times`, {
@@ -668,7 +703,7 @@ import * as Contacts from 'expo-contacts';
             }
 
             if (!RouteFound) {
-              accumulatedTime += durationInSeconds * 1000+5*60*1000;// Update accumulated time to include current leg's duration
+              accumulatedTime += durationInSeconds * 1000+waitTime*60*1000;// Update accumulated time to include current leg's duration
             }
         }
         Toast.show({
@@ -1027,13 +1062,13 @@ import * as Contacts from 'expo-contacts';
                 </Text>
                 <Text style={styles.box}>{expectedArrivalTime}</Text>
               </View>}
-              {RouteFound && nextPoint.departure_time !== nextPoint.arrival_time && (
+              {RouteFound && currentPoint.departure_time !== currentPoint.arrival_time && (
                 <View style={{ margin: 2 }}>
                   <Text style={styles.Text1}>
                     Extra Time Needed to be Waited at {sourceIndex}:
                   </Text>
                   <Text style={styles.box}>
-                    { nextPoint.arrival_time-extractNumberFromDurationText(leg.duration.text)-currentPoint.arrival_time-5} min
+                    { nextPoint.arrival_time-extractNumberFromDurationText(leg.duration.text)-currentPoint.arrival_time-waitTime} min
                   </Text>
                 </View>
               )}
