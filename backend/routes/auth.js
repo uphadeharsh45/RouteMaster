@@ -47,7 +47,8 @@ router.post('/createuser', [
             email: req.body.email,
             mobile:req.body.mobile,
             image:'',
-            gender:''
+            gender:'',
+            waitTime:5
         })
 
         const data = {
@@ -147,7 +148,7 @@ router.post("/userdata", async (req, res) => {
   
 
   router.post("/update-user", async (req, res) => {
-    const { name, email, mobile, image, gender } = req.body;
+    const { name, email, mobile, image, gender,waitTime } = req.body;
     try {
       await User.updateOne(
         { email: email },
@@ -157,6 +158,7 @@ router.post("/userdata", async (req, res) => {
             mobile,
             image,
             gender,
+            waitTime,
           },
         }
       );

@@ -24,6 +24,7 @@ const Profile = ({ signOut }) => {
   const [email, setEmail] = useState('');
   const [gender, setGender] = useState('');
   const [mobile, setMobile] = useState('');
+  const [waitTime,setWaitTime]=useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -44,12 +45,13 @@ const Profile = ({ signOut }) => {
 
         const result = await response.json();
         if (response.ok) {
-          const { name, email, gender = '', mobile, image = '' } = result.data;
+          const { name, email, gender = '', mobile, image = '',waitTime } = result.data;
           setName(name || '');
           setEmail(email || '');
           setGender(gender || '');
           setMobile(mobile || '');
           setImage(image || '');
+          setWaitTime(waitTime)
         } else {
           throw new Error(result.error);
         }
@@ -91,7 +93,58 @@ const Profile = ({ signOut }) => {
     }
   };
 
+  const checkWaitTime = (time) => {
+    if ( isNaN(time)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid waiting time',
+        text2: 'Waiting time should be a number',
+      });
+      return;
+    }
+  
+    if (time < 0 || time > 30) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid waiting time',
+        text2: 'Waiting time should be between 0 to 30 min',
+      });
+      return;
+    }
+  
+    setWaitTime(time);
+  }
+  
+
   const handleUpdateProfile = async () => {
+    if ( isNaN(waitTime)) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid waiting time',
+        text2: 'Waiting time should be a number',
+      });
+      return;
+    }
+  
+    if (waitTime < 0 || waitTime > 30) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid waiting time',
+        text2: 'Waiting time should be between 0 to 30 min',
+      });
+      return;
+    }
+
+    if(isNaN(mobile) || mobile.length!==10)
+    {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid mobile no.',
+        // text2: 'Waiting time should be between 0 to 30 min',
+      });
+      return;
+    }
+  
     try {
       const response = await fetch(`${apiUrl}/api/auth/update-user`, {
         method: 'POST',
@@ -104,6 +157,7 @@ const Profile = ({ signOut }) => {
           gender,
           mobile,
           image,
+          waitTime,
         }),
       });
 
@@ -300,6 +354,17 @@ const Profile = ({ signOut }) => {
                 style={styles.infoEditSecond_text}
                 onChange={e => setConfirmPassword(e.nativeEvent.text)}
                 value={confirmPassword}
+              />
+            </View>
+
+            <View style={styles.infoEditView}>
+              <Text style={styles.infoEditFirst_text}>Wait Time</Text>
+              <TextInput
+                placeholder="Wait time"
+                placeholderTextColor={'#999797'}
+                style={styles.infoEditSecond_text}
+                onChange={e =>{checkWaitTime(e.nativeEvent.text)}}
+                defaultValue={waitTime}
               />
             </View>
           </View>
