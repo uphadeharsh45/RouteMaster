@@ -1065,7 +1065,7 @@ const handleSMS = async () => {
           <TouchableOpacity onPress={() => setContactModalVisible(true)}>
             <Text style={styles.contactPickerText}>Select from Contacts</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setShowStartPicker(true)}>
+          {/* <TouchableOpacity onPress={() => setShowStartPicker(true)}>
             <Text style={styles.timeText}>
               START TIME: {formatTime(startTime)}
             </Text>
@@ -1081,10 +1081,10 @@ const handleSMS = async () => {
                 setStartTime(selectedTime || startTime);
               }}
             />
-          )}
+          )} */}
           <TouchableOpacity onPress={() => setShowEndPicker(true)}>
             <Text style={styles.timeText}>
-              END TIME: {formatTime(endTime)}
+              DEADLINE: {formatTime(endTime)}
             </Text>
           </TouchableOpacity>
           {showEndPicker && (
