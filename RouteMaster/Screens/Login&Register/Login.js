@@ -154,7 +154,7 @@ const Login = ({ setIsLoggedIn }) => {
             <TouchableOpacity
     onPress={() => navigation.navigate('ForgotPassword')}
   >
-    <Text style={{ color: "#34A751", marginTop: 15 }}>Forgot Password?</Text>
+    <Text style={{ color: "#34A751", marginTop: 10 }}>Forgot Password?</Text>
   </TouchableOpacity>
             <View
               style={{
@@ -172,7 +172,7 @@ const Login = ({ setIsLoggedIn }) => {
                   navigation.navigate("Register");
                 }}
               >
-                <Text style={{fontWeight:'600'}}> Sign Up</Text>
+                <Text style={{fontWeight:'600',color:'#F0BF72'}}> Sign Up</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -1383,7 +1383,7 @@ const styles = StyleSheet.create({
   },
   contactNumber: {
     fontSize: 14,
-    color: 'gray',
+    color: '#34A751',
   },
   contactPickerText: {
     color: '#34A751',
@@ -1395,7 +1395,7 @@ const styles = StyleSheet.create({
     height: '80%',
     backgroundColor: 'white',
     borderRadius: 15,
-    paddingVertical: 30,
+    paddingVertical: 40,
     paddingHorizontal: 20,
     shadowColor: '#000',
     shadowOffset: {

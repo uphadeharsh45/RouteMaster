@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   },
   inBut2: {
     width: '100%',
-    backgroundColor: '#18b152',
+    backgroundColor: '#34A751',
     alignItems: 'center',
     paddingHorizontal: 15,
     paddingVertical: 10,
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
   },
   inBut: {
     width: '50%',
-    backgroundColor: '#18b152',
+    backgroundColor: '#34A751',
     alignItems: 'center',
     paddingHorizontal: 15,
     paddingVertical: 10,
