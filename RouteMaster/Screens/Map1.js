@@ -19,7 +19,7 @@ import {
   FlatList,
   
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker,PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from "expo-location";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import {
@@ -808,6 +808,7 @@ const optimizedRouteCoordinates = data[0]
               }}
             />
             <MapView
+            provider={PROVIDER_GOOGLE}
               ref={mapRef}
               style={StyleSheet.absoluteFill}
               initialRegion={region}
