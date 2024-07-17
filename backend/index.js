@@ -54,43 +54,46 @@ async function getTravelTimes(locations) {
   const travelTimes = Array(numLocations).fill(null).map(() => Array(numLocations).fill(null));
 
   // Helper function to create batches
-  const createBatches = (locations, maxElements) => {
+  const createBatches = (locations, maxBatchSize) => {
     const batches = [];
-    const batchSize = Math.floor(maxElements / locations.length);
-
-    for (let i = 0; i < locations.length; i += batchSize) {
-      batches.push(locations.slice(i, i + batchSize));
+    for (let i = 0; i < locations.length; i += maxBatchSize) {
+      batches.push(locations.slice(i, i + maxBatchSize));
     }
-
     return batches;
   };
 
+  // Calculate the maximum batch size for origins and destinations to stay within the maxElements limit
+  const maxBatchSize = Math.floor(Math.sqrt(maxElements));
+
   // Generate batches of locations
-  const locationBatches = createBatches(locations, maxElements);
+  const originBatches = createBatches(locations, maxBatchSize);
+  const destinationBatches = createBatches(locations, maxBatchSize);
 
-  // Fetch travel times for each batch of origins
-  for (const originBatch of locationBatches) {
-    const origins = originBatch.map(loc => `${loc.latitude},${loc.longitude}`).join('|');
-    const destinations = locations.map(loc => `${loc.latitude},${loc.longitude}`).join('|');
+  // Fetch travel times for each combination of origin and destination batches
+  for (const originBatch of originBatches) {
+    for (const destinationBatch of destinationBatches) {
+      const origins = originBatch.map(loc => `${loc.latitude},${loc.longitude}`).join('|');
+      const destinations = destinationBatch.map(loc => `${loc.latitude},${loc.longitude}`).join('|');
 
-    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origins}&destinations=${destinations}&key=${apiKey}`;
+      const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origins}&destinations=${destinations}&key=${apiKey}`;
 
-    try {
-      const response = await axios.get(url, { timeout: 10000 });
+      try {
+        const response = await axios.get(url, { timeout: 10000 });
 
-      if (response.data.status !== 'OK') {
-        throw new Error('Error fetching data from Google Maps API');
-      }
+        if (response.data.status !== 'OK') {
+          throw new Error('Error fetching data from Google Maps API');
+        }
 
-      // Populate the travelTimes matrix
-      originBatch.forEach((origin, i) => {
-        response.data.rows[i].elements.forEach((element, j) => {
-          travelTimes[locations.indexOf(origin)][j] = element.duration.value / 3600; // Convert seconds to hours
+        // Populate the travelTimes matrix
+        originBatch.forEach((origin, i) => {
+          response.data.rows[i].elements.forEach((element, j) => {
+            travelTimes[locations.indexOf(origin)][locations.indexOf(destinationBatch[j])] = element.duration.value / 3600; // Convert seconds to hours
+          });
         });
-      });
-    } catch (error) {
-      console.error('Error fetching travel times:', error);
-      throw error;
+      } catch (error) {
+        console.error('Error fetching travel times:', error);
+        throw error;
+      }
     }
   }
 
