@@ -19,7 +19,7 @@ import React, {
     FlatList,
     
   } from "react-native";
-  import MapView, { Marker } from "react-native-maps";
+  import MapView, { Marker,PROVIDER_GOOGLE } from "react-native-maps";
   import * as Location from "expo-location";
   import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
   import {
@@ -801,6 +801,7 @@ const [contactModalVisible, setContactModalVisible] = useState(false);
                 }}
               />
               <MapView
+              provider={PROVIDER_GOOGLE}
                 ref={mapRef}
                 style={StyleSheet.absoluteFill}
                 initialRegion={region}
