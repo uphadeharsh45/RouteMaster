@@ -1284,7 +1284,8 @@ import * as Contacts from 'expo-contacts';
       marginBottom: 10,
       padding: 10,
       borderRadius: 10,
-      backgroundColor:'#fff'
+      backgroundColor:'#fff',
+      width:'89%'
     },
     locationText: {
       fontSize: 16,
@@ -1420,7 +1421,7 @@ import * as Contacts from 'expo-contacts';
       height: '80%',
       backgroundColor: 'white',
       borderRadius: 15,
-      paddingVertical: 30,
+      paddingVertical: 40,
       paddingHorizontal: 20,
       shadowColor: '#000',
       shadowOffset: {
