@@ -42,14 +42,14 @@ const Home = () => {
       key: '1',
       title: 'Hello All 1',
       text: 'Say something cool',
-      image: require('../assets/home1.jpg'),
+      image: require('../assets/home2.png'),
       backgroundColor: 'red',
     },
     {
       key: '2',
       title: 'Be Cool',
       text: 'Other Cool Stuff',
-      image: require('../assets/home2.png'),
+      image: require('../assets/home1.jpg'),
       backgroundColor: 'blue',
     },
     {
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   slider: {
     flex: 1,
     height: 290,
-    width: 345,
+    width: 'auto',
     margin: 8,
     borderRadius: 20,
   },
