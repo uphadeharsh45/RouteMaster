@@ -126,6 +126,10 @@ def solve_vrp():
     vrp_result = solve_vehicle_routing(time_matrix, time_windows, waiting_time, num_vehicles)
     return jsonify(vrp_result)
 
+@app.route('/health')
+def health():
+    return {'status': 'ok'}, 200
+
 # if __name__ == "__main__":
 #     app.run(port=3000)
 if __name__ == "__main__":
