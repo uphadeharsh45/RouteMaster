@@ -15,6 +15,10 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/routes', require('./routes/Routes'));
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 app.post('/get-travel-times', async (req, res) => {
   const { locations, timeWindows, numVehicles, startTime,waitTime } = req.body;
   console.log('Request Body:', req.body);
