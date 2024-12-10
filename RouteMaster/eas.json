@@ -6,15 +6,24 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "node": {
+        "projectRoot": "RouteMaster"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://routemasternode.onrender.com",
         "EXPO_PUBLIC_GOOGLE_API_KEY": "AIzaSyAH8zoNx77UvZIH0H6xmHIHeNlLlhcuD3s"
       }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "node": {
+        "projectRoot": "RouteMaster"
+      }
     },
     "production": {
+      "node": {
+        "projectRoot": "RouteMaster"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://routemasternode.onrender.com",
         "EXPO_PUBLIC_GOOGLE_API_KEY": "AIzaSyAH8zoNx77UvZIH0H6xmHIHeNlLlhcuD3s"
