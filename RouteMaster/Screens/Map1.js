@@ -817,11 +817,17 @@ const optimizedRouteCoordinates = data[0]
               onPress={handleMapPress}
             >
               {marker && (
+                // <Marker
+                //   image={greenmarker4}
+                //   draggable
+                //   coordinate={marker}
+                //   onDragEnd={(e) => setMarker(e.nativeEvent.coordinate)}
+                // />
                 <Marker
-                  image={greenmarker4}
                   draggable
                   coordinate={marker}
                   onDragEnd={(e) => setMarker(e.nativeEvent.coordinate)}
+                  icon={greenmarker4}
                 />
               )}
 
@@ -835,7 +841,8 @@ const optimizedRouteCoordinates = data[0]
 
               { markers.map((location, index) => (
                 <Marker
-                  image={greenmarker4}
+                  icon={greenmarker4}
+                  // image={greenmarker4}
                   key={`marker-${index}-${location.latitude}-${location.longitude}`}
                   coordinate={{
                     latitude: location.latitude,
