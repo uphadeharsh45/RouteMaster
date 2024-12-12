@@ -812,7 +812,7 @@ import * as Contacts from 'expo-contacts';
               >
                 {marker && (
                   <Marker
-                    image={greenmarker4}
+                    icon={greenmarker4}
                     draggable
                     coordinate={marker}
                     onDragEnd={(e) => setMarker(e.nativeEvent.coordinate)}
@@ -829,7 +829,7 @@ import * as Contacts from 'expo-contacts';
   
                 { markers.map((location, index) => (
                   <Marker
-                    image={greenmarker4}
+                    icon={greenmarker4}
                     key={`marker-${index}-${location.latitude}-${location.longitude}`}
                     coordinate={{
                       latitude: location.latitude,
