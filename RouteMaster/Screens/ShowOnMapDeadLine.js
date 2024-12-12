@@ -811,7 +811,7 @@ const [contactModalVisible, setContactModalVisible] = useState(false);
               >
                 {marker && (
                   <Marker
-                    icon={greenmarker4}
+                    // icon={greenmarker4}
                     draggable
                     coordinate={marker}
                     onDragEnd={(e) => setMarker(e.nativeEvent.coordinate)}
@@ -828,7 +828,7 @@ const [contactModalVisible, setContactModalVisible] = useState(false);
   
                 { markers.map((location, index) => (
                   <Marker
-                    icon={greenmarker4}
+                    // icon={greenmarker4}
                     key={`marker-${index}-${location.latitude}-${location.longitude}`}
                     coordinate={{
                       latitude: location.latitude,
