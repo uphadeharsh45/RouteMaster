@@ -820,7 +820,7 @@ const handleSMS = async () => {
             >
               {marker && (
                 <Marker
-                  icon={greenmarker4}
+                  // icon={greenmarker4}
                   draggable
                   coordinate={marker}
                   onDragEnd={(e) => setMarker(e.nativeEvent.coordinate)}
@@ -837,7 +837,7 @@ const handleSMS = async () => {
 
               { markers.map((location, index) => (
                 <Marker
-                  icon={greenmarker4}
+                  // icon={greenmarker4}
                   key={`marker-${index}-${location.latitude}-${location.longitude}`}
                   coordinate={{
                     latitude: location.latitude,
