@@ -44,7 +44,7 @@ def return_solution(data, manager, routing, solution):
         )
         plan_output += f"Time of the route: {solution.Min(time_var)}min\n"
         total_time += solution.Min(time_var)
-        print(plan_output)  # Added to print the plan output
+        print(plan_output) 
         indexOrderAllVehicles.append(indexOrderOneVehicle)
     print(f"Total time of all routes: {total_time}min")
     return indexOrderAllVehicles
@@ -52,7 +52,7 @@ def return_solution(data, manager, routing, solution):
 def solve_vehicle_routing(time_matrix, time_windows, waiting_time, num_vehicles):
     data = {
         "time_matrix": time_matrix,
-        "time_windows": [tuple(map(lambda x: max(0, int(x * 60)), tw)) for tw in time_windows],  # Ensure non-negative time windows
+        "time_windows": [tuple(map(lambda x: max(0, int(x * 60)), tw)) for tw in time_windows],  # Ensuring non-negative time windows
         "waiting_time": waiting_time,
         "num_vehicles": num_vehicles,
         "depot": 0

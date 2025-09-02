@@ -1,30 +1,29 @@
-const mongoose=require('mongoose')
+const mongoose = require('mongoose')
 
 const locationSchema = new mongoose.Schema({
-    name:{ 
-        type:String,
-        required:true
+    name: {
+        type: String,
+        required: true
     },
     latitude: {
-        type:Number,
-        required:true
+        type: Number,
+        required: true
     },
     longitude: {
-        type:Number,
-        required:true
+        type: Number,
+        required: true
     },
     startTime: String,
-    endTime:String,
+    endTime: String,
     phoneNumber: String,
 });
 
 const twrouteSchema = new mongoose.Schema({
-    user: { 
+    user: {
         type: mongoose.Schema.Types.ObjectId,
-         ref: 'user' 
-        }, // Reference to the User model
-    // name: String,
-    locations: [locationSchema], // Array of locations with the defined schema
+        ref: 'user'
+    },
+    locations: [locationSchema],
 });
 
 const TWRoute = mongoose.model('twroute', twrouteSchema);
